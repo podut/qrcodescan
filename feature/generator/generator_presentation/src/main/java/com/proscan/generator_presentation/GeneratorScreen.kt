@@ -49,6 +49,76 @@ fun GeneratorScreen(
         }
     }
 
+    // --- Contact picker for Contact form ---
+    val contactFormPickerLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            val uri = result.data?.data ?: return@rememberLauncherForActivityResult
+            val contactId = uri.lastPathSegment ?: return@rememberLauncherForActivityResult
+
+            // Display name
+            context.contentResolver.query(
+                ContactsContract.Contacts.CONTENT_URI,
+                arrayOf(ContactsContract.Contacts.DISPLAY_NAME),
+                "${ContactsContract.Contacts._ID} = ?",
+                arrayOf(contactId), null
+            )?.use { c ->
+                if (c.moveToFirst()) viewModel.onEvent(
+                    GeneratorEvent.UpdateTextField("contactName", c.getString(0).orEmpty().trim())
+                )
+            }
+
+            // Phone
+            context.contentResolver.query(
+                ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                arrayOf(ContactsContract.CommonDataKinds.Phone.NUMBER),
+                "${ContactsContract.CommonDataKinds.Phone.CONTACT_ID} = ?",
+                arrayOf(contactId), null
+            )?.use { c ->
+                if (c.moveToFirst()) viewModel.onEvent(
+                    GeneratorEvent.UpdateTextField("contactPhone", c.getString(0).orEmpty().trim())
+                )
+            }
+
+            // Email
+            context.contentResolver.query(
+                ContactsContract.CommonDataKinds.Email.CONTENT_URI,
+                arrayOf(ContactsContract.CommonDataKinds.Email.ADDRESS),
+                "${ContactsContract.CommonDataKinds.Email.CONTACT_ID} = ?",
+                arrayOf(contactId), null
+            )?.use { c ->
+                if (c.moveToFirst()) viewModel.onEvent(
+                    GeneratorEvent.UpdateTextField("contactEmail", c.getString(0).orEmpty().trim())
+                )
+            }
+
+            // Organization
+            context.contentResolver.query(
+                ContactsContract.Data.CONTENT_URI,
+                arrayOf(ContactsContract.CommonDataKinds.Organization.COMPANY),
+                "${ContactsContract.Data.CONTACT_ID} = ? AND ${ContactsContract.Data.MIMETYPE} = ?",
+                arrayOf(contactId, ContactsContract.CommonDataKinds.Organization.CONTENT_ITEM_TYPE), null
+            )?.use { c ->
+                if (c.moveToFirst()) viewModel.onEvent(
+                    GeneratorEvent.UpdateTextField("contactOrg", c.getString(0).orEmpty().trim())
+                )
+            }
+
+            // Address
+            context.contentResolver.query(
+                ContactsContract.CommonDataKinds.StructuredPostal.CONTENT_URI,
+                arrayOf(ContactsContract.CommonDataKinds.StructuredPostal.FORMATTED_ADDRESS),
+                "${ContactsContract.CommonDataKinds.StructuredPostal.CONTACT_ID} = ?",
+                arrayOf(contactId), null
+            )?.use { c ->
+                if (c.moveToFirst()) viewModel.onEvent(
+                    GeneratorEvent.UpdateTextField("contactAddress", c.getString(0).orEmpty().trim())
+                )
+            }
+        }
+    }
+
     // --- Contact picker for SMS phone ---
     val smsContactLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.StartActivityForResult()
@@ -179,7 +249,12 @@ fun GeneratorScreen(
                 onPhoneChange = { viewModel.onEvent(GeneratorEvent.UpdateTextField("contactPhone", it)) },
                 onEmailChange = { viewModel.onEvent(GeneratorEvent.UpdateTextField("contactEmail", it)) },
                 onOrgChange = { viewModel.onEvent(GeneratorEvent.UpdateTextField("contactOrg", it)) },
-                onAddressChange = { viewModel.onEvent(GeneratorEvent.UpdateTextField("contactAddress", it)) }
+                onAddressChange = { viewModel.onEvent(GeneratorEvent.UpdateTextField("contactAddress", it)) },
+                onPickContact = {
+                    contactFormPickerLauncher.launch(
+                        Intent(Intent.ACTION_PICK, ContactsContract.Contacts.CONTENT_URI)
+                    )
+                }
             )
             GeneratorType.CALENDAR -> CalendarForm(
                 title = state.calendarTitle,

@@ -138,9 +138,19 @@ fun ContactForm(
     name: String, phone: String, email: String, org: String, address: String,
     onNameChange: (String) -> Unit, onPhoneChange: (String) -> Unit,
     onEmailChange: (String) -> Unit, onOrgChange: (String) -> Unit,
-    onAddressChange: (String) -> Unit
+    onAddressChange: (String) -> Unit,
+    onPickContact: () -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        OutlinedButton(
+            onClick = onPickContact,
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(8.dp)
+        ) {
+            Icon(Icons.Default.Contacts, contentDescription = null, modifier = Modifier.size(16.dp))
+            Spacer(Modifier.width(6.dp))
+            Text("Importă din agendă")
+        }
         OutlinedTextField(value = name, onValueChange = onNameChange, label = { Text("Nume *") }, singleLine = true, modifier = Modifier.fillMaxWidth())
         OutlinedTextField(value = phone, onValueChange = onPhoneChange, label = { Text("Telefon") }, singleLine = true, modifier = Modifier.fillMaxWidth())
         OutlinedTextField(value = email, onValueChange = onEmailChange, label = { Text("Email") }, singleLine = true, modifier = Modifier.fillMaxWidth())
