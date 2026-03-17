@@ -7,4 +7,6 @@ sealed class GeneratorEvent {
     object Share : GeneratorEvent()
     object CopyToClipboard : GeneratorEvent()
     object ClearGenerated : GeneratorEvent()
+    object GetCurrentLocation : GeneratorEvent()
+    object SaveToGallery : GeneratorEvent()
 }

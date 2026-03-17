@@ -1,9 +1,15 @@
 package com.proscan.generator_presentation
 
+import android.annotation.SuppressLint
 import android.content.ClipData
 import android.content.ClipboardManager
+import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
+import android.location.LocationManager
+import android.os.Build
+import android.os.Environment
+import android.provider.MediaStore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.proscan.core.domain.model.ScanResult
@@ -21,6 +27,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
@@ -41,29 +48,24 @@ class GeneratorViewModel @Inject constructor(
                     selectedType = event.type,
                     generatedBitmap = null,
                     generatedContent = "",
-                    barcodeInput = ""
+                    barcodeInput = "",
+                    error = null
                 )
             }
-            is GeneratorEvent.UpdateTextField -> {
-                updateField(event.field, event.value)
-            }
-            is GeneratorEvent.Generate -> {
-                generateQr()
-            }
-            is GeneratorEvent.Share -> {
-                shareQr()
-            }
-            is GeneratorEvent.CopyToClipboard -> {
-                copyToClipboard()
-            }
+            is GeneratorEvent.UpdateTextField -> updateField(event.field, event.value)
+            is GeneratorEvent.Generate -> generateQr()
+            is GeneratorEvent.Share -> shareQr()
+            is GeneratorEvent.CopyToClipboard -> copyToClipboard()
             is GeneratorEvent.ClearGenerated -> {
                 _state.value = _state.value.copy(generatedBitmap = null, generatedContent = "")
             }
+            is GeneratorEvent.GetCurrentLocation -> getCurrentLocation()
+            is GeneratorEvent.SaveToGallery -> saveToGallery()
         }
     }
 
     private fun updateField(field: String, value: String) {
-        _state.value = when (field) {
+        val updated = when (field) {
             "text" -> _state.value.copy(textInput = value)
             "url" -> _state.value.copy(urlInput = value)
             "phone" -> _state.value.copy(phoneInput = value)
@@ -87,13 +89,39 @@ class GeneratorViewModel @Inject constructor(
             "barcode" -> _state.value.copy(barcodeInput = value)
             else -> _state.value
         }
+        _state.value = updated.copy(error = null)
+    }
+
+    private fun validateInput(s: GeneratorState): String? = when (s.selectedType) {
+        GeneratorType.TEXT -> if (s.textInput.isBlank()) "Completați câmpul de text" else null
+        GeneratorType.URL -> if (s.urlInput.isBlank()) "Completați URL-ul" else null
+        GeneratorType.PHONE -> if (s.phoneInput.isBlank()) "Completați numărul de telefon" else null
+        GeneratorType.EMAIL -> if (s.emailTo.isBlank()) "Completați adresa de email" else null
+        GeneratorType.SMS -> if (s.smsPhone.isBlank()) "Completați numărul de telefon" else null
+        GeneratorType.CONTACT -> if (s.contactName.isBlank()) "Completați cel puțin numele" else null
+        GeneratorType.CALENDAR -> if (s.calendarTitle.isBlank()) "Completați titlul evenimentului" else null
+        GeneratorType.LOCATION -> when {
+            s.locationLat.isBlank() -> "Completați latitudinea"
+            s.locationLng.isBlank() -> "Completați longitudinea"
+            s.locationLat.toDoubleOrNull() == null -> "Latitudine invalidă"
+            s.locationLng.toDoubleOrNull() == null -> "Longitudine invalidă"
+            else -> null
+        }
+        GeneratorType.CLIPBOARD -> if (s.clipboardContent.isBlank()) "Completați conținutul" else null
+        else -> if (s.barcodeInput.isBlank()) "Completați valoarea codului" else null
     }
 
     private fun generateQr() {
+        val s = _state.value
+        val error = validateInput(s)
+        if (error != null) {
+            _state.value = s.copy(error = error)
+            return
+        }
+
         viewModelScope.launch(Dispatchers.IO) {
             _state.value = _state.value.copy(isLoading = true, error = null)
             try {
-                val s = _state.value
                 val outputFormat = s.selectedType.toOutputFormat()
                 val request = when (s.selectedType) {
                     GeneratorType.TEXT -> QrGenerateRequest.TextRequest(s.textInput)
@@ -127,7 +155,6 @@ class GeneratorViewModel @Inject constructor(
                     isLoading = false
                 )
 
-                // Save to history
                 val deviceId = preferences.getDeviceId()
                 val scanResult = ScanResult(
                     deviceId = deviceId,
@@ -143,30 +170,64 @@ class GeneratorViewModel @Inject constructor(
         }
     }
 
-    private fun GeneratorType.toScanType(): ScanType = when (this) {
-        GeneratorType.URL      -> ScanType.URL
-        GeneratorType.PHONE    -> ScanType.PHONE
-        GeneratorType.EMAIL    -> ScanType.EMAIL
-        GeneratorType.SMS      -> ScanType.SMS
-        GeneratorType.CONTACT  -> ScanType.CONTACT
-        GeneratorType.CALENDAR -> ScanType.CALENDAR
-        GeneratorType.LOCATION -> ScanType.LOCATION
-        else                   -> ScanType.TEXT
+    @SuppressLint("MissingPermission")
+    private fun getCurrentLocation() {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val lm = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+                val location = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER)
+                    ?: lm.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
+                    ?: lm.getLastKnownLocation(LocationManager.PASSIVE_PROVIDER)
+                if (location != null) {
+                    _state.value = _state.value.copy(
+                        locationLat = "%.6f".format(location.latitude),
+                        locationLng = "%.6f".format(location.longitude),
+                        error = null
+                    )
+                } else {
+                    _state.value = _state.value.copy(error = "Nu s-a putut obține locația. Activați GPS-ul.")
+                }
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(error = "Eroare locație: ${e.message}")
+            }
+        }
     }
 
-    private fun GeneratorType.toOutputFormat(): OutputFormat = when (this) {
-        GeneratorType.EAN_13      -> OutputFormat.EAN_13
-        GeneratorType.UPC_E       -> OutputFormat.UPC_E
-        GeneratorType.UPC_A       -> OutputFormat.UPC_A
-        GeneratorType.CODE_39     -> OutputFormat.CODE_39
-        GeneratorType.CODE_93     -> OutputFormat.CODE_93
-        GeneratorType.CODE_128    -> OutputFormat.CODE_128
-        GeneratorType.ITF         -> OutputFormat.ITF
-        GeneratorType.PDF_417     -> OutputFormat.PDF_417
-        GeneratorType.CODABAR     -> OutputFormat.CODABAR
-        GeneratorType.DATA_MATRIX -> OutputFormat.DATA_MATRIX
-        GeneratorType.AZTEC       -> OutputFormat.AZTEC
-        else                      -> OutputFormat.QR_CODE
+    private fun saveToGallery() {
+        val bitmap = _state.value.generatedBitmap ?: return
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val filename = "ProScan_${System.currentTimeMillis()}.png"
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    val values = ContentValues().apply {
+                        put(MediaStore.Images.Media.DISPLAY_NAME, filename)
+                        put(MediaStore.Images.Media.MIME_TYPE, "image/png")
+                        put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/ProScan")
+                        put(MediaStore.Images.Media.IS_PENDING, 1)
+                    }
+                    val uri = context.contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)
+                    if (uri != null) {
+                        context.contentResolver.openOutputStream(uri)?.use { out ->
+                            bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, out)
+                        }
+                        values.clear()
+                        values.put(MediaStore.Images.Media.IS_PENDING, 0)
+                        context.contentResolver.update(uri, values, null, null)
+                    }
+                } else {
+                    val dir = java.io.File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "ProScan")
+                    dir.mkdirs()
+                    val file = java.io.File(dir, filename)
+                    file.outputStream().use { bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }
+                    android.media.MediaScannerConnection.scanFile(context, arrayOf(file.absolutePath), null, null)
+                }
+                withContext(Dispatchers.Main) {
+                    android.widget.Toast.makeText(context, "Salvat în Galerie (Pictures/ProScan)", android.widget.Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(error = "Nu s-a putut salva: ${e.message}")
+            }
+        }
     }
 
     private fun copyToClipboard() {
@@ -198,7 +259,6 @@ class GeneratorViewModel @Inject constructor(
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             })
         } catch (e: Exception) {
-            // fallback to text share
             val intent = Intent(Intent.ACTION_SEND).apply {
                 type = "text/plain"
                 putExtra(Intent.EXTRA_TEXT, content)
@@ -208,5 +268,31 @@ class GeneratorViewModel @Inject constructor(
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             })
         }
+    }
+
+    private fun GeneratorType.toScanType(): ScanType = when (this) {
+        GeneratorType.URL      -> ScanType.URL
+        GeneratorType.PHONE    -> ScanType.PHONE
+        GeneratorType.EMAIL    -> ScanType.EMAIL
+        GeneratorType.SMS      -> ScanType.SMS
+        GeneratorType.CONTACT  -> ScanType.CONTACT
+        GeneratorType.CALENDAR -> ScanType.CALENDAR
+        GeneratorType.LOCATION -> ScanType.LOCATION
+        else                   -> ScanType.TEXT
+    }
+
+    private fun GeneratorType.toOutputFormat(): OutputFormat = when (this) {
+        GeneratorType.EAN_13      -> OutputFormat.EAN_13
+        GeneratorType.UPC_E       -> OutputFormat.UPC_E
+        GeneratorType.UPC_A       -> OutputFormat.UPC_A
+        GeneratorType.CODE_39     -> OutputFormat.CODE_39
+        GeneratorType.CODE_93     -> OutputFormat.CODE_93
+        GeneratorType.CODE_128    -> OutputFormat.CODE_128
+        GeneratorType.ITF         -> OutputFormat.ITF
+        GeneratorType.PDF_417     -> OutputFormat.PDF_417
+        GeneratorType.CODABAR     -> OutputFormat.CODABAR
+        GeneratorType.DATA_MATRIX -> OutputFormat.DATA_MATRIX
+        GeneratorType.AZTEC       -> OutputFormat.AZTEC
+        else                      -> OutputFormat.QR_CODE
     }
 }

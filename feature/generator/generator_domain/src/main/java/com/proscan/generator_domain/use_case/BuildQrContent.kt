@@ -1,6 +1,7 @@
 package com.proscan.generator_domain.use_case
 
 import com.proscan.generator_domain.model.QrGenerateRequest
+import java.net.URLEncoder
 
 class BuildQrContent {
     operator fun invoke(request: QrGenerateRequest): String {
@@ -15,14 +16,14 @@ class BuildQrContent {
             is QrGenerateRequest.EmailRequest -> {
                 val sb = StringBuilder("mailto:${request.to}")
                 val params = mutableListOf<String>()
-                if (request.subject.isNotBlank()) params.add("subject=${request.subject}")
-                if (request.body.isNotBlank()) params.add("body=${request.body}")
+                if (request.subject.isNotBlank()) params.add("subject=${URLEncoder.encode(request.subject, "UTF-8").replace("+", "%20")}")
+                if (request.body.isNotBlank()) params.add("body=${URLEncoder.encode(request.body, "UTF-8").replace("+", "%20")}")
                 if (params.isNotEmpty()) sb.append("?${params.joinToString("&")}")
                 sb.toString()
             }
             is QrGenerateRequest.SmsRequest -> {
-                val sms = "smsto:${request.phone}"
-                if (request.message.isNotBlank()) "$sms:${request.message}" else sms
+                val phone = request.phone.trim()
+                if (request.message.isNotBlank()) "smsto:$phone:${request.message}" else "smsto:$phone"
             }
             is QrGenerateRequest.ContactRequest -> buildString {
                 appendLine("BEGIN:VCARD")

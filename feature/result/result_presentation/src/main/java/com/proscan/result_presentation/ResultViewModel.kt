@@ -120,7 +120,17 @@ class ResultViewModel @Inject constructor(
             is ScanAction.OpenUrl -> Intent(Intent.ACTION_VIEW, Uri.parse(action.url))
             is ScanAction.Dial -> Intent(Intent.ACTION_DIAL, Uri.parse(action.phone))
             is ScanAction.SendEmail -> Intent(Intent.ACTION_SENDTO, Uri.parse(action.mailto))
-            is ScanAction.SendSms -> Intent(Intent.ACTION_SENDTO, Uri.parse(action.sms))
+            is ScanAction.SendSms -> {
+                val raw = action.sms
+                val withoutScheme = raw.removePrefix("smsto:").removePrefix("SMSTO:")
+                    .removePrefix("sms:").removePrefix("SMS:")
+                val colonIdx = withoutScheme.indexOf(':')
+                val phone = if (colonIdx >= 0) withoutScheme.substring(0, colonIdx) else withoutScheme
+                val body = if (colonIdx >= 0) withoutScheme.substring(colonIdx + 1) else ""
+                Intent(Intent.ACTION_SENDTO, Uri.parse("smsto:${phone.trim()}")).apply {
+                    if (body.isNotBlank()) putExtra("sms_body", body.trim())
+                }
+            }
             is ScanAction.OpenMap -> Intent(Intent.ACTION_VIEW, Uri.parse(action.geo))
             is ScanAction.AddCalendar -> Intent(Intent.ACTION_VIEW, Uri.parse(action.url))
             is ScanAction.SaveContact -> {
