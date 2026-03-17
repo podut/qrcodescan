@@ -22,6 +22,21 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+private val PAYMENT_KEYWORDS = listOf(
+    "pay", "payment", "checkout", "plata", "parcare", "parking",
+    "card", "secure", "verify", "bank", "stripe", "paypal", "revolut",
+    "netopia", "euplatesc", "mobilpay", "order", "purchase", "billing"
+)
+
+private fun isPaymentUrl(url: String): Boolean {
+    val lower = url.lowercase()
+    return PAYMENT_KEYWORDS.any { lower.contains(it) }
+}
+
+private fun extractDomain(url: String): String = try {
+    Uri.parse(url).host?.removePrefix("www.") ?: url
+} catch (e: Exception) { url }
+
 @HiltViewModel
 class ResultViewModel @Inject constructor(
     private val historyRepository: HistoryRepository,
@@ -61,10 +76,30 @@ class ResultViewModel @Inject constructor(
 
     fun onEvent(event: ResultEvent) {
         when (event) {
-            is ResultEvent.ExecuteAction -> executeAction(event.action)
+            is ResultEvent.ExecuteAction -> checkAndExecuteAction(event.action)
+            is ResultEvent.ConfirmPendingAction -> {
+                val pending = _state.value.pendingAction
+                _state.value = _state.value.copy(showPaymentWarning = false, pendingAction = null, warningDomain = "")
+                if (pending != null) launchAction(pending)
+            }
+            is ResultEvent.DismissWarning -> {
+                _state.value = _state.value.copy(showPaymentWarning = false, pendingAction = null, warningDomain = "")
+            }
             is ResultEvent.CopyToClipboard -> copyContent()
             is ResultEvent.Share -> shareContent()
             is ResultEvent.NavigateBack -> viewModelScope.launch { _uiEvent.send(UiEvent.NavigateUp) }
+        }
+    }
+
+    private fun checkAndExecuteAction(action: ScanAction) {
+        if (action is ScanAction.OpenUrl && isPaymentUrl(action.url)) {
+            _state.value = _state.value.copy(
+                showPaymentWarning = true,
+                pendingAction = action,
+                warningDomain = extractDomain(action.url)
+            )
+        } else {
+            launchAction(action)
         }
     }
 
@@ -87,6 +122,8 @@ class ResultViewModel @Inject constructor(
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         try { context.startActivity(intent) } catch (e: Exception) { /* ignore */ }
     }
+
+    private fun launchAction(action: ScanAction) = executeAction(action)
 
     private fun copyContent() {
         val content = _state.value.scanResult?.content ?: return

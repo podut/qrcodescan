@@ -7,5 +7,8 @@ data class ResultState(
     val scanResult: ScanResult? = null,
     val actions: List<ScanAction> = emptyList(),
     val isLoading: Boolean = true,
-    val error: String? = null
+    val error: String? = null,
+    val showPaymentWarning: Boolean = false,
+    val pendingAction: ScanAction? = null,
+    val warningDomain: String = ""
 )

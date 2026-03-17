@@ -31,6 +31,14 @@ fun ResultScreen(
         }
     }
 
+    if (state.showPaymentWarning) {
+        PaymentWarningDialog(
+            domain = state.warningDomain,
+            onConfirm = { viewModel.onEvent(ResultEvent.ConfirmPendingAction) },
+            onDismiss = { viewModel.onEvent(ResultEvent.DismissWarning) }
+        )
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
