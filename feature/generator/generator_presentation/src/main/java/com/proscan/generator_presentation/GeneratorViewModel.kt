@@ -149,8 +149,27 @@ class GeneratorViewModel @Inject constructor(
     }
 
     private fun shareQr() {
+        val bitmap = _state.value.generatedBitmap ?: return
         val content = _state.value.generatedContent
-        if (content.isNotBlank()) {
+        try {
+            val shareDir = java.io.File(context.cacheDir, "qr_share").also { it.mkdirs() }
+            val file = java.io.File(shareDir, "qr_code.png")
+            file.outputStream().use { bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }
+            val uri = androidx.core.content.FileProvider.getUriForFile(
+                context, "${context.packageName}.provider", file
+            )
+            val intent = Intent(Intent.ACTION_SEND).apply {
+                type = "image/png"
+                putExtra(Intent.EXTRA_STREAM, uri)
+                putExtra(Intent.EXTRA_TEXT, content)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            context.startActivity(Intent.createChooser(intent, "Distribuie QR Code").apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            })
+        } catch (e: Exception) {
+            // fallback to text share
             val intent = Intent(Intent.ACTION_SEND).apply {
                 type = "text/plain"
                 putExtra(Intent.EXTRA_TEXT, content)

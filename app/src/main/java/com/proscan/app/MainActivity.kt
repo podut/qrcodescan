@@ -1,5 +1,6 @@
 package com.proscan.app
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -37,9 +38,14 @@ private val SplashBg = Color(0xFFF8FAFF)
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
+    private var sharedText = mutableStateOf<String?>(null)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        sharedText.value = intent.takeIf { it.action == Intent.ACTION_SEND }
+            ?.getStringExtra(Intent.EXTRA_TEXT)
         setContent {
             ProScanTheme {
                 var splashDone by remember { mutableStateOf(false) }
@@ -50,13 +56,19 @@ class MainActivity : ComponentActivity() {
                     label = "splash_crossfade"
                 ) { done ->
                     if (done) {
-                        ProScanApp()
+                        ProScanApp(initialSharedText = sharedText.value)
                     } else {
                         SplashScreen(onFinished = { splashDone = true })
                     }
                 }
             }
         }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        sharedText.value = intent.takeIf { it.action == Intent.ACTION_SEND }
+            ?.getStringExtra(Intent.EXTRA_TEXT)
     }
 }
 

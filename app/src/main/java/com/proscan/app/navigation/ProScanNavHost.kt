@@ -1,6 +1,7 @@
 package com.proscan.app.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -16,8 +17,17 @@ import com.proscan.settings_presentation.SettingsScreen
 @Composable
 fun ProScanNavHost(
     navController: NavHostController,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    initialSharedText: String? = null
 ) {
+    LaunchedEffect(initialSharedText) {
+        if (!initialSharedText.isNullOrBlank()) {
+            navController.navigate(Route.Generator.route) {
+                launchSingleTop = true
+            }
+        }
+    }
+
     NavHost(
         navController = navController,
         startDestination = Route.Scanner.route,
@@ -48,7 +58,7 @@ fun ProScanNavHost(
         }
 
         composable(Route.Generator.route) {
-            GeneratorScreen()
+            GeneratorScreen(sharedText = initialSharedText)
         }
 
         composable(Route.Settings.route) {

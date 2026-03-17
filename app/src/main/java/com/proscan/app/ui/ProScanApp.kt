@@ -41,7 +41,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @Composable
-fun ProScanApp() {
+fun ProScanApp(initialSharedText: String? = null) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
@@ -76,7 +76,8 @@ fun ProScanApp() {
     ) { paddingValues ->
         ProScanNavHost(
             navController = navController,
-            modifier = Modifier.padding(paddingValues)
+            modifier = Modifier.padding(paddingValues),
+            initialSharedText = initialSharedText
         )
     }
 }

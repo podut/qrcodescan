@@ -13,10 +13,17 @@ import com.proscan.generator_presentation.components.*
 
 @Composable
 fun GeneratorScreen(
+    sharedText: String? = null,
     viewModel: GeneratorViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
     val scrollState = rememberScrollState()
+
+    LaunchedEffect(sharedText) {
+        if (!sharedText.isNullOrBlank()) {
+            viewModel.onEvent(GeneratorEvent.UpdateTextField("text", sharedText))
+        }
+    }
 
     Column(
         modifier = Modifier
