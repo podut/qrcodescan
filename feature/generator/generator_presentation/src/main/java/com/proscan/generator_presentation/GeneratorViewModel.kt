@@ -6,9 +6,14 @@ import android.content.Context
 import android.content.Intent
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.proscan.core.domain.model.ScanResult
+import com.proscan.core.domain.model.ScanSource
+import com.proscan.core.domain.model.ScanType
+import com.proscan.core.domain.preferences.ProScanPreferences
 import com.proscan.generator_domain.model.OutputFormat
 import com.proscan.generator_domain.model.QrGenerateRequest
 import com.proscan.generator_domain.use_case.GeneratorUseCases
+import com.proscan.history_domain.repository.HistoryRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
@@ -21,6 +26,8 @@ import javax.inject.Inject
 @HiltViewModel
 class GeneratorViewModel @Inject constructor(
     private val useCases: GeneratorUseCases,
+    private val historyRepository: HistoryRepository,
+    private val preferences: ProScanPreferences,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
@@ -119,10 +126,32 @@ class GeneratorViewModel @Inject constructor(
                     generatedContent = content,
                     isLoading = false
                 )
+
+                // Save to history
+                val deviceId = preferences.getDeviceId()
+                val scanResult = ScanResult(
+                    deviceId = deviceId,
+                    type = s.selectedType.toScanType(),
+                    content = content,
+                    format = outputFormat.name,
+                    source = ScanSource.GENERATED
+                )
+                historyRepository.insertScan(scanResult)
             } catch (e: Exception) {
                 _state.value = _state.value.copy(isLoading = false, error = e.message)
             }
         }
+    }
+
+    private fun GeneratorType.toScanType(): ScanType = when (this) {
+        GeneratorType.URL      -> ScanType.URL
+        GeneratorType.PHONE    -> ScanType.PHONE
+        GeneratorType.EMAIL    -> ScanType.EMAIL
+        GeneratorType.SMS      -> ScanType.SMS
+        GeneratorType.CONTACT  -> ScanType.CONTACT
+        GeneratorType.CALENDAR -> ScanType.CALENDAR
+        GeneratorType.LOCATION -> ScanType.LOCATION
+        else                   -> ScanType.TEXT
     }
 
     private fun GeneratorType.toOutputFormat(): OutputFormat = when (this) {

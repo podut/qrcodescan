@@ -8,7 +8,13 @@ data class ScanResult(
     val type: ScanType,
     val content: String,
     val format: String = "QR_CODE",
+    val source: String = ScanSource.SCANNED,
     val createdAt: Long = System.currentTimeMillis(),
     val isPinned: Boolean = false,
     val isSynced: Boolean = false
 )
+
+object ScanSource {
+    const val SCANNED = "SCANNED"
+    const val GENERATED = "GENERATED"
+}

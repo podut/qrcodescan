@@ -6,7 +6,7 @@ import com.proscan.history_data.local.entity.ScanHistoryEntity
 
 @Database(
     entities = [ScanHistoryEntity::class],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 abstract class ProScanDatabase : RoomDatabase() {

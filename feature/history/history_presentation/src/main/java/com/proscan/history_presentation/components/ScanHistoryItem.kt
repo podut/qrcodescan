@@ -14,6 +14,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.proscan.core.domain.model.ScanResult
+import com.proscan.core.domain.model.ScanSource
 import com.proscan.core.domain.model.ScanType
 import com.proscan.core_ui.theme.*
 import java.text.SimpleDateFormat
@@ -66,11 +67,29 @@ fun ScanHistoryItem(
                     overflow = TextOverflow.Ellipsis,
                     style = MaterialTheme.typography.bodyMedium
                 )
-                Text(
-                    text = timeStr,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Text(
+                        text = timeStr,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    if (scan.source == ScanSource.GENERATED) {
+                        Surface(
+                            color = Indigo100,
+                            shape = RoundedCornerShape(4.dp)
+                        ) {
+                            Text(
+                                text = "Generat",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = Indigo600,
+                                modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
+                            )
+                        }
+                    }
+                }
             }
 
             // Actions

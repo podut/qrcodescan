@@ -11,6 +11,7 @@ data class ScanHistoryEntity(
     val type: String,
     val content: String,
     val format: String,
+    val source: String,
     val createdAt: Long,
     val isPinned: Int, // 0 = false, 1 = true
     val isSynced: Int  // 0 = false, 1 = true
