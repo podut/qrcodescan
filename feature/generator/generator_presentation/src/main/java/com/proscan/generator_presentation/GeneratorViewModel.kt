@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.zxing.BarcodeFormat
 import com.proscan.generator_domain.model.QrGenerateRequest
 import com.proscan.generator_domain.use_case.GeneratorUseCases
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -29,7 +30,12 @@ class GeneratorViewModel @Inject constructor(
     fun onEvent(event: GeneratorEvent) {
         when (event) {
             is GeneratorEvent.SelectType -> {
-                _state.value = _state.value.copy(selectedType = event.type, generatedBitmap = null, generatedContent = "")
+                _state.value = _state.value.copy(
+                    selectedType = event.type,
+                    generatedBitmap = null,
+                    generatedContent = "",
+                    barcodeInput = ""
+                )
             }
             is GeneratorEvent.UpdateTextField -> {
                 updateField(event.field, event.value)
@@ -71,6 +77,7 @@ class GeneratorViewModel @Inject constructor(
             "locationLat" -> _state.value.copy(locationLat = value)
             "locationLng" -> _state.value.copy(locationLng = value)
             "clipboard" -> _state.value.copy(clipboardContent = value)
+            "barcode" -> _state.value.copy(barcodeInput = value)
             else -> _state.value
         }
     }
@@ -80,6 +87,7 @@ class GeneratorViewModel @Inject constructor(
             _state.value = _state.value.copy(isLoading = true, error = null)
             try {
                 val s = _state.value
+                val barcodeFormat = s.selectedType.toZxingFormat()
                 val request = when (s.selectedType) {
                     GeneratorType.TEXT -> QrGenerateRequest.TextRequest(s.textInput)
                     GeneratorType.URL -> QrGenerateRequest.UrlRequest(s.urlInput)
@@ -94,9 +102,18 @@ class GeneratorViewModel @Inject constructor(
                         QrGenerateRequest.LocationRequest(lat, lng)
                     }
                     GeneratorType.CLIPBOARD -> QrGenerateRequest.ClipboardRequest(s.clipboardContent)
+                    else -> QrGenerateRequest.TextRequest(s.barcodeInput)
                 }
                 val content = useCases.buildQrContent(request)
-                val bitmap = useCases.generateQrBitmap(content)
+                val is1D = barcodeFormat != BarcodeFormat.QR_CODE &&
+                        barcodeFormat != BarcodeFormat.DATA_MATRIX &&
+                        barcodeFormat != BarcodeFormat.AZTEC &&
+                        barcodeFormat != BarcodeFormat.PDF_417
+                val bitmap = if (is1D) {
+                    useCases.generateQrBitmap(content, barcodeFormat, 800, 300)
+                } else {
+                    useCases.generateQrBitmap(content, barcodeFormat, 512, 512)
+                }
                 _state.value = _state.value.copy(
                     generatedBitmap = bitmap,
                     generatedContent = content,
@@ -106,6 +123,21 @@ class GeneratorViewModel @Inject constructor(
                 _state.value = _state.value.copy(isLoading = false, error = e.message)
             }
         }
+    }
+
+    private fun GeneratorType.toZxingFormat(): BarcodeFormat = when (this) {
+        GeneratorType.EAN_13      -> BarcodeFormat.EAN_13
+        GeneratorType.UPC_E       -> BarcodeFormat.UPC_E
+        GeneratorType.UPC_A       -> BarcodeFormat.UPC_A
+        GeneratorType.CODE_39     -> BarcodeFormat.CODE_39
+        GeneratorType.CODE_93     -> BarcodeFormat.CODE_93
+        GeneratorType.CODE_128    -> BarcodeFormat.CODE_128
+        GeneratorType.ITF         -> BarcodeFormat.ITF
+        GeneratorType.PDF_417     -> BarcodeFormat.PDF_417
+        GeneratorType.CODABAR     -> BarcodeFormat.CODABAR
+        GeneratorType.DATA_MATRIX -> BarcodeFormat.DATA_MATRIX
+        GeneratorType.AZTEC       -> BarcodeFormat.AZTEC
+        else                      -> BarcodeFormat.QR_CODE
     }
 
     private fun copyToClipboard() {

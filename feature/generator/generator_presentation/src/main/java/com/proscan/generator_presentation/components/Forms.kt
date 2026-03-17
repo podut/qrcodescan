@@ -110,3 +110,21 @@ fun ClipboardForm(content: String, onContentChange: (String) -> Unit) {
         modifier = Modifier.fillMaxWidth()
     )
 }
+
+@Composable
+fun BarcodeForm(value: String, onValueChange: (String) -> Unit, hint: String, label: String) {
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        OutlinedTextField(
+            value = value,
+            onValueChange = onValueChange,
+            label = { Text(label) },
+            placeholder = { Text(hint) },
+            modifier = Modifier.fillMaxWidth()
+        )
+        Text(
+            text = hint,
+            style = androidx.compose.material3.MaterialTheme.typography.bodySmall,
+            color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}

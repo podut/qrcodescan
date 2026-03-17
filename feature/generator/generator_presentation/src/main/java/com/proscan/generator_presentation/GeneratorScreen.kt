@@ -97,6 +97,72 @@ fun GeneratorScreen(
                 content = state.clipboardContent,
                 onContentChange = { viewModel.onEvent(GeneratorEvent.UpdateTextField("clipboard", it)) }
             )
+            GeneratorType.EAN_13 -> BarcodeForm(
+                value = state.barcodeInput,
+                onValueChange = { viewModel.onEvent(GeneratorEvent.UpdateTextField("barcode", it)) },
+                label = "EAN-13",
+                hint = "12 cifre (ex: 590123412345)"
+            )
+            GeneratorType.UPC_E -> BarcodeForm(
+                value = state.barcodeInput,
+                onValueChange = { viewModel.onEvent(GeneratorEvent.UpdateTextField("barcode", it)) },
+                label = "UPC-E",
+                hint = "6 cifre (ex: 012345)"
+            )
+            GeneratorType.UPC_A -> BarcodeForm(
+                value = state.barcodeInput,
+                onValueChange = { viewModel.onEvent(GeneratorEvent.UpdateTextField("barcode", it)) },
+                label = "UPC-A",
+                hint = "11 cifre (ex: 01234567890)"
+            )
+            GeneratorType.CODE_39 -> BarcodeForm(
+                value = state.barcodeInput,
+                onValueChange = { viewModel.onEvent(GeneratorEvent.UpdateTextField("barcode", it)) },
+                label = "CODE 39",
+                hint = "Litere mari, cifre, - . \$ / + % (ex: HELLO-123)"
+            )
+            GeneratorType.CODE_93 -> BarcodeForm(
+                value = state.barcodeInput,
+                onValueChange = { viewModel.onEvent(GeneratorEvent.UpdateTextField("barcode", it)) },
+                label = "CODE 93",
+                hint = "Litere mari, cifre, caractere speciale"
+            )
+            GeneratorType.CODE_128 -> BarcodeForm(
+                value = state.barcodeInput,
+                onValueChange = { viewModel.onEvent(GeneratorEvent.UpdateTextField("barcode", it)) },
+                label = "CODE 128",
+                hint = "Orice text ASCII (ex: ABC-123)"
+            )
+            GeneratorType.ITF -> BarcodeForm(
+                value = state.barcodeInput,
+                onValueChange = { viewModel.onEvent(GeneratorEvent.UpdateTextField("barcode", it)) },
+                label = "ITF",
+                hint = "Număr par de cifre (ex: 12345678)"
+            )
+            GeneratorType.PDF_417 -> BarcodeForm(
+                value = state.barcodeInput,
+                onValueChange = { viewModel.onEvent(GeneratorEvent.UpdateTextField("barcode", it)) },
+                label = "PDF 417",
+                hint = "Text sau date (ex: Text complet)"
+            )
+            GeneratorType.CODABAR -> BarcodeForm(
+                value = state.barcodeInput,
+                onValueChange = { viewModel.onEvent(GeneratorEvent.UpdateTextField("barcode", it)) },
+                label = "CODABAR",
+                hint = "Cifre cu start/stop A/B/C/D (ex: A12345B)"
+            )
+            GeneratorType.DATA_MATRIX -> BarcodeForm(
+                value = state.barcodeInput,
+                onValueChange = { viewModel.onEvent(GeneratorEvent.UpdateTextField("barcode", it)) },
+                label = "Data Matrix",
+                hint = "Orice text (ex: Hello World)"
+            )
+            GeneratorType.AZTEC -> BarcodeForm(
+                value = state.barcodeInput,
+                onValueChange = { viewModel.onEvent(GeneratorEvent.UpdateTextField("barcode", it)) },
+                label = "Aztec",
+                hint = "Orice text (ex: Hello World)"
+            )
         }
 
         GenerateButton(

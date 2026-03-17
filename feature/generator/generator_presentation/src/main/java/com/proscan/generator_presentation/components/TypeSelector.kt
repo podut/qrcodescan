@@ -54,13 +54,24 @@ fun TypeSelector(
 }
 
 private fun typeIcon(type: GeneratorType): ImageVector = when (type) {
-    GeneratorType.TEXT     -> Icons.Outlined.Notes
-    GeneratorType.URL      -> Icons.Outlined.Link
-    GeneratorType.PHONE    -> Icons.Outlined.Phone
-    GeneratorType.EMAIL    -> Icons.Outlined.Email
-    GeneratorType.SMS      -> Icons.Outlined.Sms
-    GeneratorType.CONTACT  -> Icons.Outlined.Person
-    GeneratorType.CALENDAR -> Icons.Outlined.CalendarMonth
-    GeneratorType.LOCATION -> Icons.Outlined.LocationOn
-    GeneratorType.CLIPBOARD -> Icons.Outlined.ContentPaste
+    GeneratorType.TEXT        -> Icons.Outlined.Notes
+    GeneratorType.URL         -> Icons.Outlined.Link
+    GeneratorType.PHONE       -> Icons.Outlined.Phone
+    GeneratorType.EMAIL       -> Icons.Outlined.Email
+    GeneratorType.SMS         -> Icons.Outlined.Sms
+    GeneratorType.CONTACT     -> Icons.Outlined.Person
+    GeneratorType.CALENDAR    -> Icons.Outlined.CalendarMonth
+    GeneratorType.LOCATION    -> Icons.Outlined.LocationOn
+    GeneratorType.CLIPBOARD   -> Icons.Outlined.ContentPaste
+    GeneratorType.EAN_13      -> Icons.Outlined.QrCodeScanner
+    GeneratorType.UPC_E       -> Icons.Outlined.QrCodeScanner
+    GeneratorType.UPC_A       -> Icons.Outlined.QrCodeScanner
+    GeneratorType.CODE_39     -> Icons.Outlined.QrCodeScanner
+    GeneratorType.CODE_93     -> Icons.Outlined.QrCodeScanner
+    GeneratorType.CODE_128    -> Icons.Outlined.QrCodeScanner
+    GeneratorType.ITF         -> Icons.Outlined.QrCodeScanner
+    GeneratorType.PDF_417     -> Icons.Outlined.QrCode2
+    GeneratorType.CODABAR     -> Icons.Outlined.QrCodeScanner
+    GeneratorType.DATA_MATRIX -> Icons.Outlined.QrCode2
+    GeneratorType.AZTEC       -> Icons.Outlined.QrCode2
 }
