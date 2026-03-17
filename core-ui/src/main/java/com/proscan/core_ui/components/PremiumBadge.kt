@@ -7,6 +7,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -20,9 +21,11 @@ fun PremiumBadge(
     isPro: Boolean,
     modifier: Modifier = Modifier
 ) {
+    val primary = MaterialTheme.colorScheme.primary
+    val tertiary = MaterialTheme.colorScheme.tertiary
     val (gradient, label) = if (isPro) {
         Pair(
-            Brush.horizontalGradient(listOf(Indigo600, Violet500)),
+            Brush.horizontalGradient(listOf(primary, tertiary)),
             "PRO"
         )
     } else {

@@ -14,9 +14,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.proscan.core_ui.theme.Indigo600
+import androidx.compose.material3.MaterialTheme
 import com.proscan.core_ui.theme.OutfitFamily
-import com.proscan.core_ui.theme.Violet500
 
 @Composable
 fun GradientButton(
@@ -26,7 +25,7 @@ fun GradientButton(
     enabled: Boolean = true
 ) {
     val gradient = Brush.horizontalGradient(
-        colors = listOf(Indigo600, Violet500)
+        colors = listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary)
     )
 
     Box(

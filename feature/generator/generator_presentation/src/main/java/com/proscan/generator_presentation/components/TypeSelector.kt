@@ -10,7 +10,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
-import com.proscan.core_ui.theme.Indigo600
 import com.proscan.generator_presentation.GeneratorType
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -20,6 +19,7 @@ fun TypeSelector(
     onTypeSelected: (GeneratorType) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val primary = MaterialTheme.colorScheme.primary
     Row(
         modifier = modifier.horizontalScroll(rememberScrollState()),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -38,14 +38,14 @@ fun TypeSelector(
                 },
                 label = { Text(type.label) },
                 colors = FilterChipDefaults.filterChipColors(
-                    selectedContainerColor = Indigo600.copy(alpha = 0.12f),
-                    selectedLabelColor = Indigo600,
-                    selectedLeadingIconColor = Indigo600
+                    selectedContainerColor = primary.copy(alpha = 0.12f),
+                    selectedLabelColor = primary,
+                    selectedLeadingIconColor = primary
                 ),
                 border = FilterChipDefaults.filterChipBorder(
                     enabled = true,
                     selected = selected,
-                    selectedBorderColor = Indigo600.copy(alpha = 0.45f),
+                    selectedBorderColor = primary.copy(alpha = 0.45f),
                     selectedBorderWidth = 1.5.dp
                 )
             )

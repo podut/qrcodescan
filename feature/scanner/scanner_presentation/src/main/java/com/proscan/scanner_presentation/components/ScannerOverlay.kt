@@ -10,10 +10,10 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.dp
-import com.proscan.core_ui.theme.Indigo600
 import com.proscan.core_ui.theme.Dimensions
 
 @Composable
@@ -35,6 +35,7 @@ fun ScannerOverlay(
     )
 
     val cutoutSize = Dimensions.scannerCutoutSize
+    val accentColor = MaterialTheme.colorScheme.primary
 
     Box(modifier = modifier.fillMaxSize()) {
         Canvas(modifier = Modifier.fillMaxSize()) {
@@ -58,7 +59,6 @@ fun ScannerOverlay(
             // Corner accents
             val accentLength = 24.dp.toPx()
             val strokeWidth = 3.dp.toPx()
-            val accentColor = Color(0xFF6366F1) // Indigo600
 
             // Top-left
             drawLine(accentColor, Offset(cutoutLeft, cutoutTop + cornerRadius), Offset(cutoutLeft, cutoutTop + accentLength), strokeWidth)
@@ -76,7 +76,7 @@ fun ScannerOverlay(
             // Scan line
             val scanY = cutoutTop + (cutoutPx * scanLineY)
             drawLine(
-                color = Color(0xFF6366F1).copy(alpha = 0.8f),
+                color = accentColor.copy(alpha = 0.8f),
                 start = Offset(cutoutLeft + cornerRadius, scanY),
                 end = Offset(cutoutLeft + cutoutPx - cornerRadius, scanY),
                 strokeWidth = 2.dp.toPx()

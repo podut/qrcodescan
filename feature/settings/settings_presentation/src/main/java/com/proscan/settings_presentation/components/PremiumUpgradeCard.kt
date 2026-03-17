@@ -12,15 +12,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.proscan.core_ui.theme.Indigo600
-import com.proscan.core_ui.theme.Violet500
-
 @Composable
 fun PremiumUpgradeCard(
     onUpgradeClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val gradient = Brush.horizontalGradient(listOf(Indigo600, Violet500))
+    val gradient = Brush.horizontalGradient(
+        listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary)
+    )
 
     Box(
         modifier = modifier
@@ -47,7 +46,7 @@ fun PremiumUpgradeCard(
                 onClick = onUpgradeClick,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color.White,
-                    contentColor = Indigo600
+                    contentColor = MaterialTheme.colorScheme.primary
                 ),
                 modifier = Modifier.fillMaxWidth()
             ) {

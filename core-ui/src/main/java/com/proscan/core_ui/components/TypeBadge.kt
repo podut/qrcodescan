@@ -24,7 +24,7 @@ fun TypeBadge(
         ScanType.URL -> Triple(Blue100, Blue500, "URL")
         ScanType.TEXT -> Triple(Pink100, Pink500, "TEXT")
         ScanType.PHONE -> Triple(Orange100, Orange500, "TEL")
-        ScanType.EMAIL -> Triple(Indigo100, Indigo600, "EMAIL")
+        ScanType.EMAIL -> Triple(Purple100, Purple500, "EMAIL")
         ScanType.SMS -> Triple(Cyan100, Cyan500, "SMS")
         ScanType.WIFI -> Triple(Green100, Green500, "WIFI")
         ScanType.CONTACT -> Triple(Purple100, Purple500, "CONTACT")

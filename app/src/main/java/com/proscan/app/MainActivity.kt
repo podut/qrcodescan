@@ -14,7 +14,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -53,7 +53,7 @@ class MainActivity : ComponentActivity() {
         sharedText.value = intent.takeIf { it.action == Intent.ACTION_SEND }
             ?.getStringExtra(Intent.EXTRA_TEXT)
         setContent {
-            val profile by preferences.getUserProfileFlow().collectAsStateWithLifecycle(initialValue = null)
+            val profile by preferences.getUserProfileFlow().collectAsState(initial = null)
             val appTheme = profile?.settings?.appTheme ?: AppTheme.INDIGO
             val darkMode = profile?.settings?.isDarkMode ?: false
 

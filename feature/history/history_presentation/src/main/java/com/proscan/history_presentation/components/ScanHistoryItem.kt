@@ -78,13 +78,13 @@ fun ScanHistoryItem(
                     )
                     if (scan.source == ScanSource.GENERATED) {
                         Surface(
-                            color = Indigo100,
+                            color = MaterialTheme.colorScheme.primaryContainer,
                             shape = RoundedCornerShape(4.dp)
                         ) {
                             Text(
                                 text = "Generat",
                                 style = MaterialTheme.typography.labelSmall,
-                                color = Indigo600,
+                                color = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
                             )
                         }
@@ -148,7 +148,7 @@ private fun getTypeColors(type: ScanType): Pair<androidx.compose.ui.graphics.Col
         ScanType.URL -> Pair(Blue100, Blue500)
         ScanType.TEXT -> Pair(Pink100, Pink500)
         ScanType.PHONE -> Pair(Orange100, Orange500)
-        ScanType.EMAIL -> Pair(Indigo100, Indigo600)
+        ScanType.EMAIL -> Pair(Purple100, Purple500)
         ScanType.SMS -> Pair(Cyan100, Cyan500)
         ScanType.WIFI -> Pair(Green100, Green500)
         ScanType.CONTACT -> Pair(Purple100, Purple500)

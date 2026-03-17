@@ -34,9 +34,6 @@ import androidx.navigation.compose.rememberNavController
 import com.proscan.app.navigation.ProScanNavHost
 import com.proscan.app.navigation.Route
 import com.proscan.core_ui.components.ProScanTopBar
-import com.proscan.core_ui.theme.Indigo600
-import com.proscan.core_ui.theme.Slate400
-import com.proscan.core_ui.theme.Violet500
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -88,10 +85,14 @@ private fun ProScanBottomBar(
     currentRoute: String?,
     isScannerActive: Boolean
 ) {
+    val primaryColor = MaterialTheme.colorScheme.primary
+    val inactiveColor = MaterialTheme.colorScheme.onSurfaceVariant
+    val surfaceColor = MaterialTheme.colorScheme.surface
+
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shadowElevation = 8.dp,
-        color = Color.White
+        color = surfaceColor
     ) {
         Row(
             modifier = Modifier
@@ -118,17 +119,17 @@ private fun ProScanBottomBar(
                     Icon(
                         imageVector = if (currentRoute == Route.History.route) Icons.Filled.History else Icons.Outlined.History,
                         contentDescription = "Istoric",
-                        tint = if (currentRoute == Route.History.route) Indigo600 else Slate400
+                        tint = if (currentRoute == Route.History.route) primaryColor else inactiveColor
                     )
                 }
                 Text(
                     text = "Istoric",
                     style = MaterialTheme.typography.labelSmall,
-                    color = if (currentRoute == Route.History.route) Indigo600 else Slate400
+                    color = if (currentRoute == Route.History.route) primaryColor else inactiveColor
                 )
             }
 
-            // Center FAB — with canvas ripple animation
+            // Center FAB
             ScannerFab(
                 isActive = isScannerActive,
                 onClick = {
@@ -155,13 +156,13 @@ private fun ProScanBottomBar(
                     Icon(
                         imageVector = if (currentRoute == Route.Generator.route) Icons.Filled.History else Icons.Outlined.QrCode,
                         contentDescription = "Generează",
-                        tint = if (currentRoute == Route.Generator.route) Indigo600 else Slate400
+                        tint = if (currentRoute == Route.Generator.route) primaryColor else inactiveColor
                     )
                 }
                 Text(
                     text = "Generează",
                     style = MaterialTheme.typography.labelSmall,
-                    color = if (currentRoute == Route.Generator.route) Indigo600 else Slate400
+                    color = if (currentRoute == Route.Generator.route) primaryColor else inactiveColor
                 )
             }
         }
@@ -174,13 +175,13 @@ private fun ScannerFab(
     onClick: () -> Unit
 ) {
     val scope = rememberCoroutineScope()
-    val gradient = Brush.horizontalGradient(listOf(Indigo600, Violet500))
+    val primaryColor = MaterialTheme.colorScheme.primary
+    val tertiaryColor = MaterialTheme.colorScheme.tertiary
+    val gradient = Brush.horizontalGradient(listOf(primaryColor, tertiaryColor))
 
-    // 3 ripple rings, each with scale + alpha
     val rippleScales = remember { List(3) { Animatable(0f) } }
     val rippleAlphas = remember { List(3) { Animatable(0f) } }
 
-    // Idle pulse when scanner is active
     val pulseScale by rememberInfiniteTransition(label = "pulse").animateFloat(
         initialValue = 1f,
         targetValue = if (isActive) 1.08f else 1f,
@@ -217,8 +218,6 @@ private fun ScannerFab(
         modifier = Modifier.size(96.dp),
         contentAlignment = Alignment.Center
     ) {
-        // Canvas ripple rings drawn behind the FAB
-        val indigoColor = Indigo600
         androidx.compose.foundation.Canvas(modifier = Modifier.fillMaxSize()) {
             val center = Offset(size.width / 2f, size.height / 2f)
             val baseRadius = 32.dp.toPx()
@@ -226,7 +225,7 @@ private fun ScannerFab(
 
             rippleScales.forEachIndexed { i, scale ->
                 drawCircle(
-                    color = indigoColor.copy(alpha = rippleAlphas[i].value),
+                    color = primaryColor.copy(alpha = rippleAlphas[i].value),
                     radius = baseRadius + scale.value * maxExtra,
                     center = center,
                     style = Stroke(width = 2.dp.toPx())
@@ -234,7 +233,6 @@ private fun ScannerFab(
             }
         }
 
-        // FAB button
         Box(
             modifier = Modifier
                 .size(64.dp)
