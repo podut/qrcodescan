@@ -21,6 +21,7 @@ fun ScannerOverlay(
     isBatchMode: Boolean,
     batchScanCount: Int,
     lastScanned: String?,
+    bottomReservedDp: Int = 200,
     modifier: Modifier = Modifier
 ) {
     val scanLineAnimation = rememberInfiniteTransition(label = "scanLine")
@@ -28,7 +29,7 @@ fun ScannerOverlay(
         initialValue = 0f,
         targetValue = 1f,
         animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 1500, easing = LinearEasing),
+            animation = tween(durationMillis = 1800, easing = LinearEasing),
             repeatMode = RepeatMode.Reverse
         ),
         label = "scanLineY"
@@ -41,7 +42,10 @@ fun ScannerOverlay(
         Canvas(modifier = Modifier.fillMaxSize()) {
             val cutoutPx = cutoutSize.toPx()
             val cutoutLeft = (size.width - cutoutPx) / 2f
-            val cutoutTop = (size.height - cutoutPx) / 2f
+            // Center cutout in available area above the controls
+            val reservedPx = bottomReservedDp.dp.toPx()
+            val availableHeight = size.height - reservedPx
+            val cutoutTop = (availableHeight - cutoutPx) / 2f
             val cornerRadius = 24.dp.toPx()
 
             // Dark overlay

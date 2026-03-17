@@ -31,7 +31,8 @@ fun ScannerControls(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(bottom = 48.dp),
+            .navigationBarsPadding()
+            .padding(bottom = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
@@ -81,18 +82,18 @@ private fun ZoomSlider(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 24.dp)
-            .clip(RoundedCornerShape(24.dp))
-            .background(Color.Black.copy(alpha = 0.45f))
-            .padding(horizontal = 12.dp, vertical = 4.dp),
+            .padding(horizontal = 28.dp)
+            .clip(RoundedCornerShape(32.dp))
+            .background(Color.Black.copy(alpha = 0.5f))
+            .padding(horizontal = 14.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+        horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         Icon(
             imageVector = Icons.Filled.ZoomOut,
             contentDescription = "Zoom out",
-            tint = Color.White,
-            modifier = Modifier.size(20.dp)
+            tint = Color.White.copy(alpha = 0.8f),
+            modifier = Modifier.size(18.dp)
         )
         Slider(
             value = zoomLevel,
@@ -101,14 +102,16 @@ private fun ZoomSlider(
             colors = SliderDefaults.colors(
                 thumbColor = Color.White,
                 activeTrackColor = Color.White,
-                inactiveTrackColor = Color.White.copy(alpha = 0.3f)
+                inactiveTrackColor = Color.White.copy(alpha = 0.25f),
+                activeTickColor = Color.Transparent,
+                inactiveTickColor = Color.Transparent
             )
         )
         Icon(
             imageVector = Icons.Filled.ZoomIn,
             contentDescription = "Zoom in",
-            tint = Color.White,
-            modifier = Modifier.size(20.dp)
+            tint = Color.White.copy(alpha = 0.8f),
+            modifier = Modifier.size(18.dp)
         )
     }
 }

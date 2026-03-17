@@ -137,11 +137,12 @@ fun ScannerScreen(
                 modifier = Modifier.fillMaxSize()
             )
 
-            // Scanner overlay
+            // Scanner overlay — reserve space for zoom slider + buttons + nav bar
             ScannerOverlay(
                 isBatchMode = state.isBatchMode,
                 batchScanCount = state.batchScanCount,
-                lastScanned = state.lastScanned
+                lastScanned = state.lastScanned,
+                bottomReservedDp = 220
             )
 
             // Logo header with Lottie animation
