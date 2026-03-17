@@ -1,13 +1,26 @@
 package com.proscan.settings_presentation
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.proscan.core.domain.model.AppTheme
 import com.proscan.settings_presentation.components.*
 
 @Composable
@@ -45,6 +58,77 @@ fun SettingsScreen(
 
             val settings = profile.settings
 
+            // ── Aspect (Theme + Dark Mode) ─────────────────────────────────
+            Card(modifier = Modifier.fillMaxWidth()) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Text(
+                        text = "Aspect",
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+
+                    // Dark mode row
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = if (settings.isDarkMode) Icons.Default.DarkMode else Icons.Default.LightMode,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(22.dp)
+                            )
+                            Column {
+                                Text(
+                                    text = if (settings.isDarkMode) "Mod întunecat" else "Mod luminos",
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                                Text(
+                                    text = "Schimbă aspectul interfeței",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                        Switch(
+                            checked = settings.isDarkMode,
+                            onCheckedChange = { viewModel.onEvent(SettingsEvent.ToggleDarkMode(it)) }
+                        )
+                    }
+
+                    HorizontalDivider()
+
+                    // Theme color picker
+                    Text(
+                        text = "Culoare temă",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceEvenly
+                    ) {
+                        AppTheme.entries.forEach { theme ->
+                            ThemeCircle(
+                                theme = theme,
+                                isSelected = settings.appTheme == theme,
+                                onClick = { viewModel.onEvent(SettingsEvent.SelectTheme(theme)) }
+                            )
+                        }
+                    }
+                }
+            }
+
+            // ── General settings ───────────────────────────────────────────
             Card(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(8.dp)) {
                     SettingsToggleItem(
@@ -109,5 +193,47 @@ fun SettingsScreen(
         )
 
         Spacer(modifier = Modifier.height(100.dp))
+    }
+}
+
+@Composable
+private fun ThemeCircle(
+    theme: AppTheme,
+    isSelected: Boolean,
+    onClick: () -> Unit
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+        modifier = Modifier.clickable(onClick = onClick)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(46.dp)
+                .clip(CircleShape)
+                .background(Color(theme.colorArgb))
+                .then(
+                    if (isSelected)
+                        Modifier.border(3.dp, MaterialTheme.colorScheme.onSurface, CircleShape)
+                    else
+                        Modifier.border(1.5.dp, MaterialTheme.colorScheme.outline, CircleShape)
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            if (isSelected) {
+                Icon(
+                    imageVector = Icons.Default.Check,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(22.dp)
+                )
+            }
+        }
+        Text(
+            text = theme.label,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center
+        )
     }
 }

@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.*
 import androidx.datastore.preferences.preferencesDataStore
+import com.proscan.core.domain.model.AppTheme
 import com.proscan.core.domain.model.UserProfile
 import com.proscan.core.domain.model.UserSettings
 import com.proscan.core.domain.preferences.ProScanPreferences
@@ -33,6 +34,8 @@ class DefaultProScanPreferences @Inject constructor(
         val SAVE_HISTORY = booleanPreferencesKey("save_history")
         val SECURE_MODE = booleanPreferencesKey("secure_mode")
         val NOTIFICATIONS = booleanPreferencesKey("notifications")
+        val APP_THEME = stringPreferencesKey("app_theme")
+        val DARK_MODE = booleanPreferencesKey("dark_mode")
     }
 
     private val cachedDeviceId: String by lazy {
@@ -54,7 +57,9 @@ class DefaultProScanPreferences @Inject constructor(
                     autoCopy = prefs[Keys.AUTO_COPY] ?: false,
                     saveHistory = prefs[Keys.SAVE_HISTORY] ?: true,
                     secureMode = prefs[Keys.SECURE_MODE] ?: false,
-                    notifications = prefs[Keys.NOTIFICATIONS] ?: false
+                    notifications = prefs[Keys.NOTIFICATIONS] ?: false,
+                    appTheme = prefs[Keys.APP_THEME]?.let { runCatching { AppTheme.valueOf(it) }.getOrNull() } ?: AppTheme.INDIGO,
+                    isDarkMode = prefs[Keys.DARK_MODE] ?: false
                 )
             )
         }
@@ -72,6 +77,8 @@ class DefaultProScanPreferences @Inject constructor(
             prefs[Keys.SAVE_HISTORY] = settings.saveHistory
             prefs[Keys.SECURE_MODE] = settings.secureMode
             prefs[Keys.NOTIFICATIONS] = settings.notifications
+            prefs[Keys.APP_THEME] = settings.appTheme.name
+            prefs[Keys.DARK_MODE] = settings.isDarkMode
         }
     }
 
@@ -99,6 +106,8 @@ class DefaultProScanPreferences @Inject constructor(
             prefs[Keys.SAVE_HISTORY] = profile.settings.saveHistory
             prefs[Keys.SECURE_MODE] = profile.settings.secureMode
             prefs[Keys.NOTIFICATIONS] = profile.settings.notifications
+            prefs[Keys.APP_THEME] = profile.settings.appTheme.name
+            prefs[Keys.DARK_MODE] = profile.settings.isDarkMode
         }
     }
 }

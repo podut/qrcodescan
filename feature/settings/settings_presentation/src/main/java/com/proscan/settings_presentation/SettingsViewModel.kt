@@ -38,6 +38,8 @@ class SettingsViewModel @Inject constructor(
             is SettingsEvent.ToggleSaveHistory -> updateSettings(currentSettings.copy(saveHistory = event.enabled))
             is SettingsEvent.ToggleSecureMode -> updateSettings(currentSettings.copy(secureMode = event.enabled))
             is SettingsEvent.ToggleNotifications -> updateSettings(currentSettings.copy(notifications = event.enabled))
+            is SettingsEvent.SelectTheme -> updateSettings(currentSettings.copy(appTheme = event.theme))
+            is SettingsEvent.ToggleDarkMode -> updateSettings(currentSettings.copy(isDarkMode = event.enabled))
             is SettingsEvent.UpgradeToPro -> {
                 viewModelScope.launch { useCases.upgradeToPro() }
             }

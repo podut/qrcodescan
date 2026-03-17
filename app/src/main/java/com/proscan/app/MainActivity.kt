@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -27,9 +28,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.proscan.app.ui.ProScanApp
+import com.proscan.core.domain.model.AppTheme
+import com.proscan.core.domain.preferences.ProScanPreferences
 import com.proscan.core_ui.theme.ProScanTheme
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.delay
+import javax.inject.Inject
 
 private val SplashBlue = Color(0xFF42A5F5)
 private val SplashBlueDark = Color(0xFF1565C0)
@@ -39,6 +43,8 @@ private val SplashBg = Color(0xFFF8FAFF)
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
+    @Inject lateinit var preferences: ProScanPreferences
+
     private var sharedText = mutableStateOf<String?>(null)
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -47,7 +53,11 @@ class MainActivity : ComponentActivity() {
         sharedText.value = intent.takeIf { it.action == Intent.ACTION_SEND }
             ?.getStringExtra(Intent.EXTRA_TEXT)
         setContent {
-            ProScanTheme {
+            val profile by preferences.getUserProfileFlow().collectAsStateWithLifecycle(initialValue = null)
+            val appTheme = profile?.settings?.appTheme ?: AppTheme.INDIGO
+            val darkMode = profile?.settings?.isDarkMode ?: false
+
+            ProScanTheme(appTheme = appTheme, darkMode = darkMode) {
                 var splashDone by remember { mutableStateOf(false) }
 
                 Crossfade(

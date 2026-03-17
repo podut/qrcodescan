@@ -6,5 +6,7 @@ data class UserSettings(
     val autoCopy: Boolean = false,
     val saveHistory: Boolean = true,
     val secureMode: Boolean = false,
-    val notifications: Boolean = false
+    val notifications: Boolean = false,
+    val appTheme: AppTheme = AppTheme.INDIGO,
+    val isDarkMode: Boolean = false
 )
