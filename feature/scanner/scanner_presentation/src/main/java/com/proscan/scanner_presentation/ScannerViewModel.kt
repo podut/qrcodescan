@@ -9,6 +9,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.proscan.core.domain.preferences.ProScanPreferences
 import com.proscan.core.domain.util.UiEvent
+import com.proscan.core.util.SoundManager
 import com.proscan.scanner_domain.use_case.ScannerUseCases
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -26,6 +27,7 @@ import javax.inject.Inject
 class ScannerViewModel @Inject constructor(
     private val scannerUseCases: ScannerUseCases,
     private val preferences: ProScanPreferences,
+    private val soundManager: SoundManager,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
@@ -85,6 +87,11 @@ class ScannerViewModel @Inject constructor(
             // Vibrate if enabled
             if (userProfile.settings.vibrate) {
                 vibrate()
+            }
+
+            // Beep if enabled
+            if (userProfile.settings.beep) {
+                soundManager.play(R.raw.sound_scan_beep)
             }
 
             // Process and save scan

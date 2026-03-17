@@ -4,14 +4,22 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.Color
 import android.net.Uri
+import com.google.zxing.BarcodeFormat
+import com.google.zxing.MultiFormatWriter
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.proscan.core.domain.feature_flags.FeatureFlag
 import com.proscan.core.domain.feature_flags.FeatureFlagRepository
 import com.proscan.core.domain.feature_flags.FeatureUsageTracker
+import com.proscan.core.domain.preferences.ProScanPreferences
 import com.proscan.core.domain.util.UiEvent
+import com.proscan.core.util.SoundManager
 import com.proscan.history_domain.repository.HistoryRepository
 import com.proscan.result_domain.model.ScanAction
 import com.proscan.result_domain.use_case.DetectScanActions
@@ -21,6 +29,8 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -44,6 +54,8 @@ private fun extractDomain(url: String): String = try {
 class ResultViewModel @Inject constructor(
     private val historyRepository: HistoryRepository,
     private val detectScanActions: DetectScanActions,
+    private val soundManager: SoundManager,
+    private val preferences: ProScanPreferences,
     @ApplicationContext private val context: Context,
     private val featureFlagRepository: FeatureFlagRepository,
     private val featureUsageTracker: FeatureUsageTracker,
@@ -56,7 +68,12 @@ class ResultViewModel @Inject constructor(
     private val _uiEvent = Channel<UiEvent>()
     val uiEvent = _uiEvent.receiveAsFlow()
 
+    private var beepEnabled = true
+
     init {
+        preferences.getUserProfileFlow()
+            .onEach { beepEnabled = it.settings.beep }
+            .launchIn(viewModelScope)
         val scanId = savedStateHandle.get<String>("scanId")
         if (scanId != null) {
             loadScan(scanId)
@@ -69,8 +86,10 @@ class ResultViewModel @Inject constructor(
             if (scan != null) {
                 val actions = detectScanActions(scan)
                 val config = featureFlagRepository.getConfig()
+                val qrBitmap = withContext(Dispatchers.IO) { generateQrBitmap(scan.content) }
                 _state.value = ResultState(
                     scanResult = scan,
+                    qrBitmap = qrBitmap,
                     actions = actions,
                     isLoading = false,
                     domainHighlightEnabled = config.domainHighlight
@@ -106,6 +125,7 @@ class ResultViewModel @Inject constructor(
                 pendingAction = action,
                 warningDomain = extractDomain(action.url)
             )
+            if (beepEnabled) soundManager.play(R.raw.sound_error)
             viewModelScope.launch { featureUsageTracker.track(FeatureFlag.PAYMENT_WARNING_DIALOG) }
         } else {
             launchAction(action)
@@ -147,6 +167,16 @@ class ResultViewModel @Inject constructor(
 
     private fun launchAction(action: ScanAction) = executeAction(action)
 
+    private fun generateQrBitmap(content: String): Bitmap? = try {
+        val size = 400
+        val bitMatrix = MultiFormatWriter().encode(content, BarcodeFormat.QR_CODE, size, size)
+        Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888).apply {
+            for (x in 0 until size) for (y in 0 until size) {
+                setPixel(x, y, if (bitMatrix[x, y]) Color.BLACK else Color.WHITE)
+            }
+        }
+    } catch (_: Exception) { null }
+
     private fun copyContent() {
         val content = _state.value.scanResult?.content ?: return
         val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
@@ -155,13 +185,37 @@ class ResultViewModel @Inject constructor(
 
     private fun shareContent() {
         val content = _state.value.scanResult?.content ?: return
-        val intent = Intent(Intent.ACTION_SEND).apply {
-            type = "text/plain"
-            putExtra(Intent.EXTRA_TEXT, content)
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        val bitmap = _state.value.qrBitmap
+        try {
+            if (bitmap != null) {
+                val shareDir = java.io.File(context.cacheDir, "qr_share").also { it.mkdirs() }
+                val file = java.io.File(shareDir, "qr_code.png")
+                file.outputStream().use { bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }
+                val uri = androidx.core.content.FileProvider.getUriForFile(
+                    context, "${context.packageName}.provider", file
+                )
+                val intent = Intent(Intent.ACTION_SEND).apply {
+                    type = "image/png"
+                    putExtra(Intent.EXTRA_STREAM, uri)
+                    putExtra(Intent.EXTRA_TEXT, content)
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+                context.startActivity(Intent.createChooser(intent, "Distribuie QR Code").apply {
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                })
+            } else {
+                throw Exception("no bitmap")
+            }
+        } catch (e: Exception) {
+            val intent = Intent(Intent.ACTION_SEND).apply {
+                type = "text/plain"
+                putExtra(Intent.EXTRA_TEXT, content)
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            context.startActivity(Intent.createChooser(intent, "Distribuie").apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            })
         }
-        context.startActivity(Intent.createChooser(intent, "Distribuie").apply {
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        })
     }
 }

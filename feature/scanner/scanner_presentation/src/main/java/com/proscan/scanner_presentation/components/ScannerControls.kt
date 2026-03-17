@@ -32,9 +32,9 @@ fun ScannerControls(
         modifier = modifier
             .fillMaxWidth()
             .navigationBarsPadding()
-            .padding(bottom = 24.dp),
+            .padding(bottom = 12.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         // Zoom slider
         ZoomSlider(
@@ -82,23 +82,23 @@ private fun ZoomSlider(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 28.dp)
+            .padding(horizontal = 48.dp)
             .clip(RoundedCornerShape(32.dp))
             .background(Color.Black.copy(alpha = 0.5f))
-            .padding(horizontal = 14.dp, vertical = 6.dp),
+            .padding(horizontal = 10.dp, vertical = 2.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(10.dp)
+        horizontalArrangement = Arrangement.spacedBy(6.dp)
     ) {
         Icon(
             imageVector = Icons.Filled.ZoomOut,
             contentDescription = "Zoom out",
             tint = Color.White.copy(alpha = 0.8f),
-            modifier = Modifier.size(18.dp)
+            modifier = Modifier.size(14.dp)
         )
         Slider(
             value = zoomLevel,
             onValueChange = onZoomChange,
-            modifier = Modifier.weight(1f),
+            modifier = Modifier.weight(1f).height(32.dp),
             colors = SliderDefaults.colors(
                 thumbColor = Color.White,
                 activeTrackColor = Color.White,
@@ -111,7 +111,7 @@ private fun ZoomSlider(
             imageVector = Icons.Filled.ZoomIn,
             contentDescription = "Zoom in",
             tint = Color.White.copy(alpha = 0.8f),
-            modifier = Modifier.size(18.dp)
+            modifier = Modifier.size(14.dp)
         )
     }
 }
@@ -130,8 +130,8 @@ private fun ControlButton(
         IconButton(
             onClick = onClick,
             modifier = Modifier
-                .size(56.dp)
-                .clip(RoundedCornerShape(16.dp))
+                .size(44.dp)
+                .clip(RoundedCornerShape(12.dp))
                 .background(
                     if (isActive) Color.White.copy(alpha = 0.3f)
                     else Color.Black.copy(alpha = 0.4f)
@@ -141,13 +141,13 @@ private fun ControlButton(
                 imageVector = icon,
                 contentDescription = label,
                 tint = Color.White,
-                modifier = Modifier.size(24.dp)
+                modifier = Modifier.size(20.dp)
             )
         }
         Text(
             text = label,
             color = Color.White.copy(alpha = 0.85f),
-            fontSize = 11.sp,
+            fontSize = 10.sp,
             maxLines = 1
         )
     }

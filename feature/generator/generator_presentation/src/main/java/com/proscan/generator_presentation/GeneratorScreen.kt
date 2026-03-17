@@ -119,6 +119,17 @@ fun GeneratorScreen(
         }
     }
 
+    // --- READ_CONTACTS permission launcher ---
+    val contactsPermLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) {
+            contactFormPickerLauncher.launch(
+                Intent(Intent.ACTION_PICK, ContactsContract.Contacts.CONTENT_URI)
+            )
+        }
+    }
+
     // --- Contact picker for SMS phone ---
     val smsContactLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.StartActivityForResult()
@@ -251,9 +262,16 @@ fun GeneratorScreen(
                 onOrgChange = { viewModel.onEvent(GeneratorEvent.UpdateTextField("contactOrg", it)) },
                 onAddressChange = { viewModel.onEvent(GeneratorEvent.UpdateTextField("contactAddress", it)) },
                 onPickContact = {
-                    contactFormPickerLauncher.launch(
-                        Intent(Intent.ACTION_PICK, ContactsContract.Contacts.CONTENT_URI)
-                    )
+                    val hasPermission = ContextCompat.checkSelfPermission(
+                        context, Manifest.permission.READ_CONTACTS
+                    ) == PackageManager.PERMISSION_GRANTED
+                    if (hasPermission) {
+                        contactFormPickerLauncher.launch(
+                            Intent(Intent.ACTION_PICK, ContactsContract.Contacts.CONTENT_URI)
+                        )
+                    } else {
+                        contactsPermLauncher.launch(Manifest.permission.READ_CONTACTS)
+                    }
                 }
             )
             GeneratorType.CALENDAR -> CalendarForm(

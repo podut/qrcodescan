@@ -10,6 +10,7 @@ import android.location.LocationManager
 import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
+import com.proscan.core.util.SoundManager
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.proscan.core.domain.model.ScanResult
@@ -35,6 +36,7 @@ class GeneratorViewModel @Inject constructor(
     private val useCases: GeneratorUseCases,
     private val historyRepository: HistoryRepository,
     private val preferences: ProScanPreferences,
+    private val soundManager: SoundManager,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
@@ -149,11 +151,23 @@ class GeneratorViewModel @Inject constructor(
                 } else {
                     useCases.generateQrBitmap(content, outputFormat, 512, 512)
                 }
+
+                if (bitmap == null) {
+                    _state.value = _state.value.copy(
+                        isLoading = false,
+                        error = barcodeFormatHint(s.selectedType)
+                    )
+                    return@launch
+                }
+
                 _state.value = _state.value.copy(
                     generatedBitmap = bitmap,
                     generatedContent = content,
                     isLoading = false
                 )
+                if (preferences.getUserProfile().settings.beep) {
+                    soundManager.play(R.raw.sound_qr_generated)
+                }
 
                 val deviceId = preferences.getDeviceId()
                 val scanResult = ScanResult(
@@ -221,6 +235,9 @@ class GeneratorViewModel @Inject constructor(
                     file.outputStream().use { bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }
                     android.media.MediaScannerConnection.scanFile(context, arrayOf(file.absolutePath), null, null)
                 }
+                if (preferences.getUserProfile().settings.beep) {
+                    soundManager.play(R.raw.sound_capture)
+                }
                 withContext(Dispatchers.Main) {
                     android.widget.Toast.makeText(context, "Salvat în Galerie (Pictures/ProScan)", android.widget.Toast.LENGTH_SHORT).show()
                 }
@@ -268,6 +285,19 @@ class GeneratorViewModel @Inject constructor(
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             })
         }
+    }
+
+    private fun barcodeFormatHint(type: GeneratorType): String = when (type) {
+        GeneratorType.EAN_13   -> "EAN-13: introduceți exact 12 sau 13 cifre"
+        GeneratorType.UPC_A    -> "UPC-A: introduceți exact 11 sau 12 cifre"
+        GeneratorType.UPC_E    -> "UPC-E: introduceți 6-8 cifre"
+        GeneratorType.CODE_39  -> "CODE-39: doar litere mari, cifre și - . $ / + % spațiu"
+        GeneratorType.CODE_93  -> "CODE-93: caractere ASCII standard"
+        GeneratorType.CODE_128 -> "CODE-128: orice text ASCII"
+        GeneratorType.ITF      -> "ITF: număr par de cifre (minim 2)"
+        GeneratorType.CODABAR  -> "CODABAR: cifre și - \$ : / . + între A-D la început/sfârșit"
+        GeneratorType.PDF_417  -> "PDF-417: format invalid"
+        else -> "Format invalid pentru codul introdus"
     }
 
     private fun GeneratorType.toScanType(): ScanType = when (this) {

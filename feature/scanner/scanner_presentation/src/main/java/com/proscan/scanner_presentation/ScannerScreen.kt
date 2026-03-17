@@ -33,7 +33,11 @@ import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
 import com.proscan.core.domain.util.UiEvent
 import com.proscan.scanner_presentation.components.*
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
+import kotlin.coroutines.resume
+import kotlinx.coroutines.suspendCancellableCoroutine
 import java.util.concurrent.Executors
 
 @OptIn(ExperimentalPermissionsApi::class)
@@ -77,52 +81,67 @@ fun ScannerScreen(
     // Hold a reference to the PreviewView so we can rebind on flip
     var previewView by remember { mutableStateOf<PreviewView?>(null) }
 
-    // Rebind camera whenever facingFront changes OR previewView becomes available
-    LaunchedEffect(state.facingFront, previewView) {
-        val pv = previewView ?: return@LaunchedEffect
-        cameraProviderFuture.addListener({
-            val provider = cameraProviderFuture.get()
-            val preview = Preview.Builder().build().also {
-                it.surfaceProvider = pv.surfaceProvider
-            }
-            val cameraSelector = if (state.facingFront) {
-                CameraSelector.DEFAULT_FRONT_CAMERA
-            } else {
-                CameraSelector.DEFAULT_BACK_CAMERA
-            }
-            val imageAnalysis = ImageAnalysis.Builder()
-                .setTargetResolution(Size(1280, 720))
-                .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-                .build()
-                .also { analysis ->
-                    analysis.setAnalyzer(executor) { imageProxy ->
-                        processImage(imageProxy, barcodeScanner) { value, format ->
-                            viewModel.onEvent(ScannerEvent.CodeScanned(value, format))
+    // Single camera binding — evită double-bind la schimbarea previewView
+    LaunchedEffect(Unit) {
+        val provider = suspendCancellableCoroutine<ProcessCameraProvider> { cont ->
+            cameraProviderFuture.addListener(
+                { cont.resume(cameraProviderFuture.get()) },
+                ContextCompat.getMainExecutor(context)
+            )
+        }
+
+        snapshotFlow { state.facingFront to previewView }
+            .distinctUntilChanged()
+            .collectLatest { (facingFront, pv) ->
+                pv ?: return@collectLatest
+                val preview = Preview.Builder().build().also {
+                    it.surfaceProvider = pv.surfaceProvider
+                }
+                val cameraSelector = if (facingFront) {
+                    CameraSelector.DEFAULT_FRONT_CAMERA
+                } else {
+                    CameraSelector.DEFAULT_BACK_CAMERA
+                }
+                val imageAnalysis = ImageAnalysis.Builder()
+                    .setTargetResolution(Size(1280, 720))
+                    .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                    .build()
+                    .also { analysis ->
+                        analysis.setAnalyzer(executor) { imageProxy ->
+                            processImage(imageProxy, barcodeScanner) { value, format ->
+                                viewModel.onEvent(ScannerEvent.CodeScanned(value, format))
+                            }
                         }
                     }
+                try {
+                    provider.unbindAll()
+                    camera = provider.bindToLifecycle(lifecycleOwner, cameraSelector, preview, imageAnalysis)
+                } catch (e: Exception) {
+                    e.printStackTrace()
                 }
-            try {
-                provider.unbindAll()
-                camera = provider.bindToLifecycle(
-                    lifecycleOwner,
-                    cameraSelector,
-                    preview,
-                    imageAnalysis
-                )
-            } catch (e: Exception) {
-                e.printStackTrace()
             }
-        }, ContextCompat.getMainExecutor(context))
     }
 
-    // Flash control reacts to state
-    LaunchedEffect(state.flashEnabled, camera) {
-        camera?.cameraControl?.enableTorch(state.flashEnabled)
+    // Flash — pornit o singură dată per cameră, rămâne activ
+    LaunchedEffect(camera) {
+        val cam = camera ?: return@LaunchedEffect
+        snapshotFlow { state.flashEnabled }
+            .distinctUntilChanged()
+            .collectLatest { enabled ->
+                try {
+                    if (cam.cameraInfo.hasFlashUnit()) cam.cameraControl.enableTorch(enabled)
+                } catch (_: Exception) {}
+            }
     }
 
-    // Zoom control reacts to state
-    LaunchedEffect(state.zoomLevel, camera) {
-        camera?.cameraControl?.setLinearZoom(state.zoomLevel)
+    // Zoom
+    LaunchedEffect(camera) {
+        val cam = camera ?: return@LaunchedEffect
+        snapshotFlow { state.zoomLevel }
+            .distinctUntilChanged()
+            .collectLatest { level ->
+                try { cam.cameraControl.setLinearZoom(level) } catch (_: Exception) {}
+            }
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -142,7 +161,7 @@ fun ScannerScreen(
                 isBatchMode = state.isBatchMode,
                 batchScanCount = state.batchScanCount,
                 lastScanned = state.lastScanned,
-                bottomReservedDp = 220
+                bottomReservedDp = 180
             )
 
             // Logo header with Lottie animation
