@@ -23,6 +23,7 @@ import com.proscan.core_ui.theme.Slate200
 @Composable
 fun ResultCard(
     scan: ScanResult,
+    showDomainHighlight: Boolean = true,
     modifier: Modifier = Modifier
 ) {
     val isUrl = scan.type == ScanType.URL
@@ -58,7 +59,7 @@ fun ResultCard(
                 )
             }
 
-            if (isUrl && domain != null) {
+            if (isUrl && domain != null && showDomainHighlight) {
                 Text(
                     text = domain,
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),

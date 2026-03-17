@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "fetch_interval_hours": 6,
+  "flags": {
+    "payment_warning_dialog": true,
+    "domain_highlight": true,
+    "domain_whitelist": false,
+    "batch_mode": true,
+    "barcode_formats": true,
+    "share_as_image": true,
+    "history_grouping": false,
+    "history_notes": false,
+    "onboarding_screen": false,
+    "dark_mode": false,
+    "ads_enabled": false,
+    "ad_frequency": 5,
+    "pro_features": true
+  }
+}

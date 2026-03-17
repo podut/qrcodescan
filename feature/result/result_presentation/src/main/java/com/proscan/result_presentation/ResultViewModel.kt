@@ -8,6 +8,9 @@ import android.net.Uri
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.proscan.core.domain.feature_flags.FeatureFlag
+import com.proscan.core.domain.feature_flags.FeatureFlagRepository
+import com.proscan.core.domain.feature_flags.FeatureUsageTracker
 import com.proscan.core.domain.util.UiEvent
 import com.proscan.history_domain.repository.HistoryRepository
 import com.proscan.result_domain.model.ScanAction
@@ -42,6 +45,8 @@ class ResultViewModel @Inject constructor(
     private val historyRepository: HistoryRepository,
     private val detectScanActions: DetectScanActions,
     @ApplicationContext private val context: Context,
+    private val featureFlagRepository: FeatureFlagRepository,
+    private val featureUsageTracker: FeatureUsageTracker,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -63,10 +68,12 @@ class ResultViewModel @Inject constructor(
             val scan = historyRepository.getScanById(id)
             if (scan != null) {
                 val actions = detectScanActions(scan)
+                val config = featureFlagRepository.getConfig()
                 _state.value = ResultState(
                     scanResult = scan,
                     actions = actions,
-                    isLoading = false
+                    isLoading = false,
+                    domainHighlightEnabled = config.domainHighlight
                 )
             } else {
                 _state.value = _state.value.copy(isLoading = false, error = "Scan not found")
@@ -92,18 +99,23 @@ class ResultViewModel @Inject constructor(
     }
 
     private fun checkAndExecuteAction(action: ScanAction) {
-        if (action is ScanAction.OpenUrl && isPaymentUrl(action.url)) {
+        val config = featureFlagRepository.getConfig()
+        if (config.paymentWarningDialog && action is ScanAction.OpenUrl && isPaymentUrl(action.url)) {
             _state.value = _state.value.copy(
                 showPaymentWarning = true,
                 pendingAction = action,
                 warningDomain = extractDomain(action.url)
             )
+            viewModelScope.launch { featureUsageTracker.track(FeatureFlag.PAYMENT_WARNING_DIALOG) }
         } else {
             launchAction(action)
         }
     }
 
     private fun executeAction(action: ScanAction) {
+        if (action is ScanAction.OpenUrl) {
+            viewModelScope.launch { featureUsageTracker.track(FeatureFlag.DOMAIN_HIGHLIGHT) }
+        }
         val intent = when (action) {
             is ScanAction.OpenUrl -> Intent(Intent.ACTION_VIEW, Uri.parse(action.url))
             is ScanAction.Dial -> Intent(Intent.ACTION_DIAL, Uri.parse(action.phone))

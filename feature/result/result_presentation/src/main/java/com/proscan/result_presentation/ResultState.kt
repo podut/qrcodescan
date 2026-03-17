@@ -10,5 +10,6 @@ data class ResultState(
     val error: String? = null,
     val showPaymentWarning: Boolean = false,
     val pendingAction: ScanAction? = null,
-    val warningDomain: String = ""
+    val warningDomain: String = "",
+    val domainHighlightEnabled: Boolean = true
 )
