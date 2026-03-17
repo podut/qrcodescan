@@ -120,6 +120,11 @@ fun ScannerScreen(
         camera?.cameraControl?.enableTorch(state.flashEnabled)
     }
 
+    // Zoom control reacts to state
+    LaunchedEffect(state.zoomLevel, camera) {
+        camera?.cameraControl?.setLinearZoom(state.zoomLevel)
+    }
+
     Box(modifier = Modifier.fillMaxSize()) {
         if (state.hasPermission) {
             // Camera Preview — factory just creates the view; binding is in LaunchedEffect above
@@ -146,10 +151,12 @@ fun ScannerScreen(
             ScannerControls(
                 flashEnabled = state.flashEnabled,
                 isBatchMode = state.isBatchMode,
+                zoomLevel = state.zoomLevel,
                 onFlashToggle = { viewModel.onEvent(ScannerEvent.ToggleFlash) },
                 onBatchToggle = { viewModel.onEvent(ScannerEvent.ToggleBatch) },
                 onFlipCamera = { viewModel.onEvent(ScannerEvent.FlipCamera) },
                 onClose = { viewModel.onEvent(ScannerEvent.Close) },
+                onZoomChange = { viewModel.onEvent(ScannerEvent.SetZoom(it)) },
                 modifier = Modifier.align(Alignment.BottomCenter)
             )
 

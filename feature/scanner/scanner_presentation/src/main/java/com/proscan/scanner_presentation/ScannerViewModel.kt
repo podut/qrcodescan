@@ -71,6 +71,9 @@ class ScannerViewModel @Inject constructor(
             is ScannerEvent.ResetCooldown -> {
                 isCooldown = false
             }
+            is ScannerEvent.SetZoom -> {
+                _state.value = _state.value.copy(zoomLevel = event.level)
+            }
         }
     }
 

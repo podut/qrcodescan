@@ -9,4 +9,5 @@ sealed class ScannerEvent {
     data class CodeScanned(val value: String, val format: String) : ScannerEvent()
     object Close : ScannerEvent()
     object ResetCooldown : ScannerEvent()
+    data class SetZoom(val level: Float) : ScannerEvent()
 }

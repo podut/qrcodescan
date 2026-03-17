@@ -14,45 +14,101 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
 @Composable
 fun ScannerControls(
     flashEnabled: Boolean,
     isBatchMode: Boolean,
+    zoomLevel: Float,
     onFlashToggle: () -> Unit,
     onBatchToggle: () -> Unit,
     onFlipCamera: () -> Unit,
     onClose: () -> Unit,
+    onZoomChange: (Float) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Row(
+    Column(
         modifier = modifier
             .fillMaxWidth()
             .padding(bottom = 48.dp),
-        horizontalArrangement = Arrangement.SpaceEvenly,
-        verticalAlignment = Alignment.CenterVertically
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        ControlButton(
-            icon = if (flashEnabled) Icons.Filled.FlashOn else Icons.Outlined.FlashOff,
-            contentDescription = if (flashEnabled) "Flash an" else "Flash oprit",
-            onClick = onFlashToggle,
-            isActive = flashEnabled
+        // Zoom slider
+        ZoomSlider(
+            zoomLevel = zoomLevel,
+            onZoomChange = onZoomChange
         )
-        ControlButton(
-            icon = Icons.Filled.QrCodeScanner,
-            contentDescription = "Mod lot",
-            onClick = onBatchToggle,
-            isActive = isBatchMode
+
+        // Control buttons with labels
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            ControlButton(
+                icon = if (flashEnabled) Icons.Filled.FlashOn else Icons.Outlined.FlashOff,
+                label = if (flashEnabled) "Flash an" else "Flash",
+                onClick = onFlashToggle,
+                isActive = flashEnabled
+            )
+            ControlButton(
+                icon = Icons.Filled.QrCodeScanner,
+                label = if (isBatchMode) "Lot activ" else "Mod lot",
+                onClick = onBatchToggle,
+                isActive = isBatchMode
+            )
+            ControlButton(
+                icon = Icons.Filled.FlipCameraAndroid,
+                label = "Întoarce",
+                onClick = onFlipCamera
+            )
+            ControlButton(
+                icon = Icons.Filled.Close,
+                label = "Închide",
+                onClick = onClose
+            )
+        }
+    }
+}
+
+@Composable
+private fun ZoomSlider(
+    zoomLevel: Float,
+    onZoomChange: (Float) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 24.dp)
+            .clip(RoundedCornerShape(24.dp))
+            .background(Color.Black.copy(alpha = 0.45f))
+            .padding(horizontal = 12.dp, vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Icon(
+            imageVector = Icons.Filled.ZoomOut,
+            contentDescription = "Zoom out",
+            tint = Color.White,
+            modifier = Modifier.size(20.dp)
         )
-        ControlButton(
-            icon = Icons.Filled.FlipCameraAndroid,
-            contentDescription = "Inversează camera",
-            onClick = onFlipCamera
+        Slider(
+            value = zoomLevel,
+            onValueChange = onZoomChange,
+            modifier = Modifier.weight(1f),
+            colors = SliderDefaults.colors(
+                thumbColor = Color.White,
+                activeTrackColor = Color.White,
+                inactiveTrackColor = Color.White.copy(alpha = 0.3f)
+            )
         )
-        ControlButton(
-            icon = Icons.Filled.Close,
-            contentDescription = "Închide",
-            onClick = onClose
+        Icon(
+            imageVector = Icons.Filled.ZoomIn,
+            contentDescription = "Zoom in",
+            tint = Color.White,
+            modifier = Modifier.size(20.dp)
         )
     }
 }
@@ -60,25 +116,36 @@ fun ScannerControls(
 @Composable
 private fun ControlButton(
     icon: ImageVector,
-    contentDescription: String,
+    label: String,
     onClick: () -> Unit,
     isActive: Boolean = false
 ) {
-    IconButton(
-        onClick = onClick,
-        modifier = Modifier
-            .size(56.dp)
-            .clip(RoundedCornerShape(16.dp))
-            .background(
-                if (isActive) Color.White.copy(alpha = 0.3f)
-                else Color.Black.copy(alpha = 0.4f)
-            )
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = contentDescription,
-            tint = Color.White,
-            modifier = Modifier.size(24.dp)
+        IconButton(
+            onClick = onClick,
+            modifier = Modifier
+                .size(56.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .background(
+                    if (isActive) Color.White.copy(alpha = 0.3f)
+                    else Color.Black.copy(alpha = 0.4f)
+                )
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = label,
+                tint = Color.White,
+                modifier = Modifier.size(24.dp)
+            )
+        }
+        Text(
+            text = label,
+            color = Color.White.copy(alpha = 0.85f),
+            fontSize = 11.sp,
+            maxLines = 1
         )
     }
 }

@@ -8,5 +8,6 @@ data class ScannerState(
     val flashEnabled: Boolean = false,
     val facingFront: Boolean = false,
     val hasPermission: Boolean = false,
-    val isLoading: Boolean = false
+    val isLoading: Boolean = false,
+    val zoomLevel: Float = 0f
 )
