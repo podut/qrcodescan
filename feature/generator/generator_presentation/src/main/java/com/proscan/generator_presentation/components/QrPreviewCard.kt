@@ -1,6 +1,7 @@
 package com.proscan.generator_presentation.components
 
 import android.graphics.Bitmap
+import androidx.annotation.RawRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -10,18 +11,20 @@ import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.airbnb.lottie.compose.*
 
 @Composable
 fun QrPreviewCard(
@@ -45,9 +48,9 @@ fun QrPreviewCard(
                 .fillMaxWidth()
                 .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            // QR image with white background and subtle border
+            // QR image
             Box(
                 modifier = Modifier
                     .size(240.dp)
@@ -64,7 +67,7 @@ fun QrPreviewCard(
                 )
             }
 
-            // Content text pill
+            // Content preview pill
             if (content.isNotBlank()) {
                 Box(
                     modifier = Modifier
@@ -80,7 +83,7 @@ fun QrPreviewCard(
                             fontWeight = FontWeight.Medium
                         ),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 3,
+                        maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
                         textAlign = TextAlign.Center,
                         modifier = Modifier.fillMaxWidth()
@@ -88,55 +91,132 @@ fun QrPreviewCard(
                 }
             }
 
-            // Action buttons row
+            // Action buttons row — vertical cards
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                OutlinedButton(
+                ActionCard(
+                    label = "Copiază",
+                    fallbackIcon = Icons.Default.ContentCopy,
+                    lottieRes = null, // drop ic_anim_copy.json in res/raw/ to enable
+                    isPrimary = false,
                     onClick = onCopy,
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Icon(
-                        Icons.Default.ContentCopy,
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(Modifier.width(4.dp))
-                    Text("Copiază", fontSize = 13.sp)
-                }
+                    modifier = Modifier.weight(1f)
+                )
 
                 if (onSave != null) {
-                    OutlinedButton(
+                    ActionCard(
+                        label = "Salvează",
+                        fallbackIcon = Icons.Default.Download,
+                        lottieRes = null, // drop ic_anim_save.json in res/raw/ to enable
+                        isPrimary = false,
                         onClick = onSave,
-                        modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Icon(
-                            Icons.Default.Download,
-                            contentDescription = null,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(Modifier.width(4.dp))
-                        Text("Salvează", fontSize = 13.sp)
-                    }
+                        modifier = Modifier.weight(1f)
+                    )
                 }
 
-                Button(
+                ActionCard(
+                    label = "Distribuie",
+                    fallbackIcon = Icons.Default.Share,
+                    lottieRes = null, // drop ic_anim_share.json in res/raw/ to enable
+                    isPrimary = true,
                     onClick = onShare,
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Icon(
-                        Icons.Default.Share,
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(Modifier.width(4.dp))
-                    Text("Distribuie", fontSize = 13.sp)
-                }
+                    modifier = Modifier.weight(1f)
+                )
             }
         }
     }
+}
+
+@Composable
+private fun ActionCard(
+    label: String,
+    fallbackIcon: ImageVector,
+    @RawRes lottieRes: Int?,
+    isPrimary: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var triggerAnim by remember { mutableStateOf(false) }
+
+    val containerColor = if (isPrimary)
+        MaterialTheme.colorScheme.primary
+    else
+        MaterialTheme.colorScheme.surfaceVariant
+
+    val contentColor = if (isPrimary)
+        MaterialTheme.colorScheme.onPrimary
+    else
+        MaterialTheme.colorScheme.onSurfaceVariant
+
+    Card(
+        onClick = {
+            triggerAnim = true
+            onClick()
+        },
+        modifier = modifier,
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = containerColor),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 14.dp, horizontal = 8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            if (lottieRes != null) {
+                LottieActionIcon(
+                    lottieRes = lottieRes,
+                    trigger = triggerAnim,
+                    onAnimEnd = { triggerAnim = false },
+                    tintColor = contentColor
+                )
+            } else {
+                Icon(
+                    imageVector = fallbackIcon,
+                    contentDescription = null,
+                    tint = contentColor,
+                    modifier = Modifier.size(26.dp)
+                )
+            }
+
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelMedium,
+                color = contentColor,
+                textAlign = TextAlign.Center,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+    }
+}
+
+@Composable
+private fun LottieActionIcon(
+    @RawRes lottieRes: Int,
+    trigger: Boolean,
+    onAnimEnd: () -> Unit,
+    tintColor: Color
+) {
+    val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(lottieRes))
+    val progress by animateLottieCompositionAsState(
+        composition = composition,
+        isPlaying = trigger,
+        iterations = 1,
+        restartOnPlay = true
+    )
+
+    LaunchedEffect(trigger, progress) {
+        if (trigger && progress >= 0.99f) onAnimEnd()
+    }
+
+    LottieAnimation(
+        composition = composition,
+        progress = { if (trigger) progress else 0f },
+        modifier = Modifier.size(26.dp)
+    )
 }

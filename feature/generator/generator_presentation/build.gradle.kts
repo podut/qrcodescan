@@ -56,4 +56,5 @@ dependencies {
     implementation(project(":feature:generator:generator_domain"))
     implementation(project(":feature:history:history_domain"))
     implementation(libs.coil.compose)
+    implementation(libs.lottie.compose)
 }
