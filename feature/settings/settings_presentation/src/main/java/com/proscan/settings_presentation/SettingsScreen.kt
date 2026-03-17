@@ -100,7 +100,12 @@ fun SettingsScreen(
                         }
                         Switch(
                             checked = settings.isDarkMode,
-                            onCheckedChange = { viewModel.onEvent(SettingsEvent.ToggleDarkMode(it)) }
+                            onCheckedChange = { viewModel.onEvent(SettingsEvent.ToggleDarkMode(it)) },
+                            colors = SwitchDefaults.colors(
+                                uncheckedThumbColor = MaterialTheme.colorScheme.outline,
+                                uncheckedTrackColor = MaterialTheme.colorScheme.surfaceVariant,
+                                uncheckedBorderColor = MaterialTheme.colorScheme.outline
+                            )
                         )
                     }
 
