@@ -4,8 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.AutoMirrored.Outlined.List
-import androidx.compose.material.icons.AutoMirrored.Outlined.Segment
+import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -52,7 +51,7 @@ fun HistoryScreen(
                 modifier = Modifier.size(40.dp)
             ) {
                 Icon(
-                    imageVector = if (state.isGrouped) List else Segment,
+                    imageVector = if (state.isGrouped) Icons.Outlined.FormatListBulleted else Icons.Outlined.AccountTree,
                     contentDescription = if (state.isGrouped) "Vizualizare listă" else "Grupează după tip",
                     tint = if (state.isGrouped) MaterialTheme.colorScheme.primary
                            else MaterialTheme.colorScheme.onSurfaceVariant
