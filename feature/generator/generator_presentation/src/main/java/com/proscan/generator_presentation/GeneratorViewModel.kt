@@ -89,6 +89,10 @@ class GeneratorViewModel @Inject constructor(
             "locationLng" -> _state.value.copy(locationLng = value)
             "clipboard" -> _state.value.copy(clipboardContent = value)
             "barcode" -> _state.value.copy(barcodeInput = value)
+            "wifiSsid" -> _state.value.copy(wifiSsid = value)
+            "wifiPassword" -> _state.value.copy(wifiPassword = value)
+            "wifiSecurity" -> _state.value.copy(wifiSecurity = value)
+            "wifiHidden" -> _state.value.copy(wifiHidden = value == "true")
             else -> _state.value
         }
         _state.value = updated.copy(error = null)
@@ -110,6 +114,7 @@ class GeneratorViewModel @Inject constructor(
             else -> null
         }
         GeneratorType.CLIPBOARD -> if (s.clipboardContent.isBlank()) "Completați conținutul" else null
+        GeneratorType.WIFI -> if (s.wifiSsid.isBlank()) "Completați numele rețelei (SSID)" else null
         else -> if (s.barcodeInput.isBlank()) "Completați valoarea codului" else null
     }
 
@@ -139,6 +144,7 @@ class GeneratorViewModel @Inject constructor(
                         QrGenerateRequest.LocationRequest(lat, lng)
                     }
                     GeneratorType.CLIPBOARD -> QrGenerateRequest.ClipboardRequest(s.clipboardContent)
+                    GeneratorType.WIFI -> QrGenerateRequest.WifiRequest(s.wifiSsid, s.wifiPassword, s.wifiSecurity, s.wifiHidden)
                     else -> QrGenerateRequest.TextRequest(s.barcodeInput)
                 }
                 val content = useCases.buildQrContent(request)
@@ -308,6 +314,7 @@ class GeneratorViewModel @Inject constructor(
         GeneratorType.CONTACT  -> ScanType.CONTACT
         GeneratorType.CALENDAR -> ScanType.CALENDAR
         GeneratorType.LOCATION -> ScanType.LOCATION
+        GeneratorType.WIFI     -> ScanType.WIFI
         else                   -> ScanType.TEXT
     }
 

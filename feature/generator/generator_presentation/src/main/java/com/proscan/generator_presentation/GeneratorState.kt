@@ -26,6 +26,10 @@ data class GeneratorState(
     val locationLng: String = "",
     val clipboardContent: String = "",
     val barcodeInput: String = "",
+    val wifiSsid: String = "",
+    val wifiPassword: String = "",
+    val wifiSecurity: String = "WPA",
+    val wifiHidden: Boolean = false,
     val generatedBitmap: Bitmap? = null,
     val generatedContent: String = "",
     val isLoading: Boolean = false,
@@ -33,6 +37,7 @@ data class GeneratorState(
 )
 
 enum class GeneratorType(val label: String) {
+    WIFI("WiFi"),
     TEXT("Text"),
     URL("URL"),
     PHONE("Telefon"),

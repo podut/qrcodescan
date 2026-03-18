@@ -34,6 +34,7 @@ fun GeneratorScreen(
     val scrollState = rememberScrollState()
     val focusManager = LocalFocusManager.current
     val context = LocalContext.current
+    var isGridView by remember { mutableStateOf(false) }
 
     LaunchedEffect(sharedText) {
         if (!sharedText.isNullOrBlank()) {
@@ -209,7 +210,9 @@ fun GeneratorScreen(
 
         TypeSelector(
             selectedType = state.selectedType,
-            onTypeSelected = { viewModel.onEvent(GeneratorEvent.SelectType(it)) }
+            onTypeSelected = { viewModel.onEvent(GeneratorEvent.SelectType(it)) },
+            isGrid = isGridView,
+            onToggleView = { isGridView = !isGridView }
         )
 
         // Form based on selected type
@@ -301,6 +304,16 @@ fun GeneratorScreen(
             GeneratorType.CLIPBOARD -> ClipboardForm(
                 content = state.clipboardContent,
                 onContentChange = { viewModel.onEvent(GeneratorEvent.UpdateTextField("clipboard", it)) }
+            )
+            GeneratorType.WIFI -> WifiForm(
+                ssid = state.wifiSsid,
+                password = state.wifiPassword,
+                security = state.wifiSecurity,
+                hidden = state.wifiHidden,
+                onSsidChange = { viewModel.onEvent(GeneratorEvent.UpdateTextField("wifiSsid", it)) },
+                onPasswordChange = { viewModel.onEvent(GeneratorEvent.UpdateTextField("wifiPassword", it)) },
+                onSecurityChange = { viewModel.onEvent(GeneratorEvent.UpdateTextField("wifiSecurity", it)) },
+                onHiddenChange = { viewModel.onEvent(GeneratorEvent.UpdateTextField("wifiHidden", it.toString())) }
             )
             GeneratorType.EAN_13 -> BarcodeForm(value = state.barcodeInput, onValueChange = { viewModel.onEvent(GeneratorEvent.UpdateTextField("barcode", it)) }, label = "EAN-13", hint = "12 cifre (ex: 590123412345)")
             GeneratorType.UPC_E -> BarcodeForm(value = state.barcodeInput, onValueChange = { viewModel.onEvent(GeneratorEvent.UpdateTextField("barcode", it)) }, label = "UPC-E", hint = "6 cifre (ex: 012345)")

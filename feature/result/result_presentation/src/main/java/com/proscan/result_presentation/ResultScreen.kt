@@ -90,6 +90,10 @@ fun ResultScreen(
                         }
                     }
 
+                    if (state.urlSecurityWarnings.isNotEmpty()) {
+                        UrlSecurityBanner(warnings = state.urlSecurityWarnings)
+                    }
+
                     ResultCard(scan = scan, showDomainHighlight = state.domainHighlightEnabled)
 
                     CopyShareRow(

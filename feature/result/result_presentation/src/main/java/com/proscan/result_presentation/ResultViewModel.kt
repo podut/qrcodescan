@@ -87,12 +87,16 @@ class ResultViewModel @Inject constructor(
                 val actions = detectScanActions(scan)
                 val config = featureFlagRepository.getConfig()
                 val qrBitmap = withContext(Dispatchers.IO) { generateQrBitmap(scan.content) }
+                val securityWarnings = if (scan.type == com.proscan.core.domain.model.ScanType.URL) {
+                    analyzeUrlSecurity(scan.content)
+                } else emptyList()
                 _state.value = ResultState(
                     scanResult = scan,
                     qrBitmap = qrBitmap,
                     actions = actions,
                     isLoading = false,
-                    domainHighlightEnabled = config.domainHighlight
+                    domainHighlightEnabled = config.domainHighlight,
+                    urlSecurityWarnings = securityWarnings
                 )
             } else {
                 _state.value = _state.value.copy(isLoading = false, error = "Scan not found")

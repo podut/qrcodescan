@@ -21,4 +21,10 @@ sealed class QrGenerateRequest {
     ) : QrGenerateRequest()
     data class LocationRequest(val lat: Double, val lng: Double) : QrGenerateRequest()
     data class ClipboardRequest(val content: String) : QrGenerateRequest()
+    data class WifiRequest(
+        val ssid: String,
+        val password: String = "",
+        val security: String = "WPA",
+        val hidden: Boolean = false
+    ) : QrGenerateRequest()
 }

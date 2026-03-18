@@ -43,6 +43,15 @@ class BuildQrContent {
             }
             is QrGenerateRequest.LocationRequest -> "geo:${request.lat},${request.lng}"
             is QrGenerateRequest.ClipboardRequest -> request.content
+            is QrGenerateRequest.WifiRequest -> buildString {
+                append("WIFI:T:${request.security};")
+                append("S:${request.ssid.escapeWifi()};")
+                if (request.password.isNotBlank()) append("P:${request.password.escapeWifi()};")
+                append("H:${request.hidden};;")
+            }
         }
     }
+
+    private fun String.escapeWifi(): String =
+        replace("\\", "\\\\").replace(";", "\\;").replace(",", "\\,").replace("\"", "\\\"")
 }

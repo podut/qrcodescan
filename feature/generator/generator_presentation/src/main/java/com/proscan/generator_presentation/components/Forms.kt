@@ -6,6 +6,16 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Contacts
 import androidx.compose.material.icons.filled.MyLocation
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -280,6 +290,97 @@ fun ClipboardForm(content: String, onContentChange: (String) -> Unit) {
         minLines = 3,
         modifier = Modifier.fillMaxWidth()
     )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun WifiForm(
+    ssid: String,
+    password: String,
+    security: String,
+    hidden: Boolean,
+    onSsidChange: (String) -> Unit,
+    onPasswordChange: (String) -> Unit,
+    onSecurityChange: (String) -> Unit,
+    onHiddenChange: (Boolean) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+    var showPassword by remember { mutableStateOf(false) }
+
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        OutlinedTextField(
+            value = ssid,
+            onValueChange = onSsidChange,
+            label = { Text("Nume rețea (SSID) *") },
+            placeholder = { Text("MyWiFiNetwork") },
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        OutlinedTextField(
+            value = password,
+            onValueChange = onPasswordChange,
+            label = { Text("Parolă") },
+            singleLine = true,
+            visualTransformation = if (showPassword) VisualTransformation.None else PasswordVisualTransformation(),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+            trailingIcon = {
+                IconButton(onClick = { showPassword = !showPassword }) {
+                    Icon(
+                        imageVector = if (showPassword) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                        contentDescription = if (showPassword) "Ascunde parola" else "Arată parola"
+                    )
+                }
+            },
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        ExposedDropdownMenuBox(
+            expanded = expanded,
+            onExpandedChange = { expanded = it }
+        ) {
+            OutlinedTextField(
+                value = when (security) {
+                    "nopass" -> "Fără parolă"
+                    "WEP" -> "WEP"
+                    else -> "WPA/WPA2"
+                },
+                onValueChange = {},
+                readOnly = true,
+                label = { Text("Tip securitate") },
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                modifier = Modifier
+                    .menuAnchor()
+                    .fillMaxWidth()
+            )
+            ExposedDropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false }
+            ) {
+                DropdownMenuItem(
+                    text = { Text("WPA/WPA2") },
+                    onClick = { onSecurityChange("WPA"); expanded = false }
+                )
+                DropdownMenuItem(
+                    text = { Text("WEP") },
+                    onClick = { onSecurityChange("WEP"); expanded = false }
+                )
+                DropdownMenuItem(
+                    text = { Text("Fără parolă") },
+                    onClick = { onSecurityChange("nopass"); expanded = false }
+                )
+            }
+        }
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text("Rețea ascunsă", style = MaterialTheme.typography.bodyMedium)
+            Switch(checked = hidden, onCheckedChange = onHiddenChange)
+        }
+    }
 }
 
 @Composable

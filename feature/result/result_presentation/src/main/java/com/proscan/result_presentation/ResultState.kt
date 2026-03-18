@@ -13,5 +13,6 @@ data class ResultState(
     val showPaymentWarning: Boolean = false,
     val pendingAction: ScanAction? = null,
     val warningDomain: String = "",
-    val domainHighlightEnabled: Boolean = true
+    val domainHighlightEnabled: Boolean = true,
+    val urlSecurityWarnings: List<UrlSecurityWarning> = emptyList()
 )
