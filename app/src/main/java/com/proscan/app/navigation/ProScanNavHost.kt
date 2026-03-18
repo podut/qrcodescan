@@ -8,6 +8,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.proscan.app.OnboardingScreen
 import com.proscan.generator_presentation.GeneratorScreen
 import com.proscan.history_presentation.HistoryScreen
 import com.proscan.result_presentation.ResultScreen
@@ -18,7 +19,9 @@ import com.proscan.settings_presentation.SettingsScreen
 fun ProScanNavHost(
     navController: NavHostController,
     modifier: Modifier = Modifier,
-    initialSharedText: String? = null
+    initialSharedText: String? = null,
+    hasSeenOnboarding: Boolean = true,
+    onOnboardingDone: () -> Unit = {}
 ) {
     LaunchedEffect(initialSharedText) {
         if (!initialSharedText.isNullOrBlank()) {
@@ -30,9 +33,17 @@ fun ProScanNavHost(
 
     NavHost(
         navController = navController,
-        startDestination = Route.Scanner.route,
+        startDestination = if (hasSeenOnboarding) Route.Scanner.route else Route.Onboarding.route,
         modifier = modifier
     ) {
+        composable(Route.Onboarding.route) {
+            OnboardingScreen(onDone = {
+                onOnboardingDone()
+                navController.navigate(Route.Scanner.route) {
+                    popUpTo(Route.Onboarding.route) { inclusive = true }
+                }
+            })
+        }
         composable(Route.Scanner.route) {
             ScannerScreen(
                 onNavigate = { route -> navController.navigate(route) },

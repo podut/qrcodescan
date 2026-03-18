@@ -8,5 +8,6 @@ data class UserSettings(
     val secureMode: Boolean = false,
     val notifications: Boolean = false,
     val appTheme: AppTheme = AppTheme.INDIGO,
-    val isDarkMode: Boolean = false
+    val isDarkMode: Boolean = false,
+    val hasSeenOnboarding: Boolean = false
 )

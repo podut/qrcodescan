@@ -64,6 +64,9 @@ class HistoryViewModel @Inject constructor(
             is HistoryEvent.CloseDetail -> {
                 _state.value = _state.value.copy(selectedScan = null, showDetailSheet = false)
             }
+            is HistoryEvent.ToggleGrouping -> {
+                _state.value = _state.value.copy(isGrouped = !_state.value.isGrouped)
+            }
         }
     }
 

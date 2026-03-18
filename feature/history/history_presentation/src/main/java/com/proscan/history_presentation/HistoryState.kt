@@ -10,5 +10,6 @@ data class HistoryState(
     val stats: ScanStats = ScanStats(0, 0, emptyMap()),
     val isLoading: Boolean = true,
     val selectedScan: ScanResult? = null,
-    val showDetailSheet: Boolean = false
+    val showDetailSheet: Boolean = false,
+    val isGrouped: Boolean = false
 )

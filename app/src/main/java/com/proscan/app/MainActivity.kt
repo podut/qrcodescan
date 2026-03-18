@@ -7,6 +7,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.*
+import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -53,9 +54,11 @@ class MainActivity : ComponentActivity() {
         sharedText.value = intent.takeIf { it.action == Intent.ACTION_SEND }
             ?.getStringExtra(Intent.EXTRA_TEXT)
         setContent {
+            val scope = rememberCoroutineScope()
             val profile by preferences.getUserProfileFlow().collectAsState(initial = null)
             val appTheme = profile?.settings?.appTheme ?: AppTheme.INDIGO
             val darkMode = profile?.settings?.isDarkMode ?: false
+            val hasSeenOnboarding = profile?.settings?.hasSeenOnboarding ?: false
 
             ProScanTheme(appTheme = appTheme, darkMode = darkMode) {
                 var splashDone by remember { mutableStateOf(false) }
@@ -66,7 +69,18 @@ class MainActivity : ComponentActivity() {
                     label = "splash_crossfade"
                 ) { done ->
                     if (done) {
-                        ProScanApp(initialSharedText = sharedText.value)
+                        ProScanApp(
+                            initialSharedText = sharedText.value,
+                            hasSeenOnboarding = hasSeenOnboarding,
+                            onOnboardingDone = {
+                                scope.launch {
+                                    val current = preferences.getUserProfile()
+                                    preferences.saveSettings(
+                                        current.settings.copy(hasSeenOnboarding = true)
+                                    )
+                                }
+                            }
+                        )
                     } else {
                         SplashScreen(onFinished = { splashDone = true })
                     }

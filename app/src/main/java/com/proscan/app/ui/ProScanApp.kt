@@ -38,16 +38,21 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @Composable
-fun ProScanApp(initialSharedText: String? = null) {
+fun ProScanApp(
+    initialSharedText: String? = null,
+    hasSeenOnboarding: Boolean = true,
+    onOnboardingDone: () -> Unit = {}
+) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
     val isScannerScreen = currentRoute == Route.Scanner.route
     val isResultScreen = currentRoute?.startsWith("result/") == true
+    val isOnboardingScreen = currentRoute == Route.Onboarding.route
 
-    val showTopBar = !isScannerScreen && !isResultScreen
-    val showBottomBar = !isResultScreen
+    val showTopBar = !isScannerScreen && !isResultScreen && !isOnboardingScreen
+    val showBottomBar = !isResultScreen && !isOnboardingScreen
 
     Scaffold(
         topBar = {
@@ -74,7 +79,9 @@ fun ProScanApp(initialSharedText: String? = null) {
         ProScanNavHost(
             navController = navController,
             modifier = Modifier.padding(paddingValues),
-            initialSharedText = initialSharedText
+            initialSharedText = initialSharedText,
+            hasSeenOnboarding = hasSeenOnboarding,
+            onOnboardingDone = onOnboardingDone
         )
     }
 }

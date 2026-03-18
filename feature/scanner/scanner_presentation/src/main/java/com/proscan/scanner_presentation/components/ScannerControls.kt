@@ -26,6 +26,7 @@ fun ScannerControls(
     onFlipCamera: () -> Unit,
     onClose: () -> Unit,
     onZoomChange: (Float) -> Unit,
+    onGalleryClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -64,6 +65,11 @@ fun ScannerControls(
                 icon = Icons.Filled.FlipCameraAndroid,
                 label = "Întoarce",
                 onClick = onFlipCamera
+            )
+            ControlButton(
+                icon = Icons.Outlined.PhotoLibrary,
+                label = "Galerie",
+                onClick = onGalleryClick
             )
             ControlButton(
                 icon = Icons.Filled.Close,

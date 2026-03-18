@@ -36,6 +36,7 @@ class DefaultProScanPreferences @Inject constructor(
         val NOTIFICATIONS = booleanPreferencesKey("notifications")
         val APP_THEME = stringPreferencesKey("app_theme")
         val DARK_MODE = booleanPreferencesKey("dark_mode")
+        val ONBOARDING_DONE = booleanPreferencesKey("onboarding_done")
     }
 
     private val cachedDeviceId: String by lazy {
@@ -59,7 +60,8 @@ class DefaultProScanPreferences @Inject constructor(
                     secureMode = prefs[Keys.SECURE_MODE] ?: false,
                     notifications = prefs[Keys.NOTIFICATIONS] ?: false,
                     appTheme = prefs[Keys.APP_THEME]?.let { runCatching { AppTheme.valueOf(it) }.getOrNull() } ?: AppTheme.INDIGO,
-                    isDarkMode = prefs[Keys.DARK_MODE] ?: false
+                    isDarkMode = prefs[Keys.DARK_MODE] ?: false,
+                    hasSeenOnboarding = prefs[Keys.ONBOARDING_DONE] ?: false
                 )
             )
         }
@@ -79,6 +81,7 @@ class DefaultProScanPreferences @Inject constructor(
             prefs[Keys.NOTIFICATIONS] = settings.notifications
             prefs[Keys.APP_THEME] = settings.appTheme.name
             prefs[Keys.DARK_MODE] = settings.isDarkMode
+            prefs[Keys.ONBOARDING_DONE] = settings.hasSeenOnboarding
         }
     }
 
@@ -108,6 +111,7 @@ class DefaultProScanPreferences @Inject constructor(
             prefs[Keys.NOTIFICATIONS] = profile.settings.notifications
             prefs[Keys.APP_THEME] = profile.settings.appTheme.name
             prefs[Keys.DARK_MODE] = profile.settings.isDarkMode
+            prefs[Keys.ONBOARDING_DONE] = profile.settings.hasSeenOnboarding
         }
     }
 }

@@ -9,4 +9,5 @@ sealed class HistoryEvent {
     object Export : HistoryEvent()
     data class OpenDetail(val scan: ScanResult) : HistoryEvent()
     object CloseDetail : HistoryEvent()
+    object ToggleGrouping : HistoryEvent()
 }

@@ -1,7 +1,11 @@
 package com.proscan.scanner_presentation
 
 import android.Manifest
+import android.provider.MediaStore
 import android.util.Size
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
@@ -77,6 +81,45 @@ fun ScannerScreen(
     val cameraProviderFuture = remember { ProcessCameraProvider.getInstance(context) }
     val executor = remember { Executors.newSingleThreadExecutor() }
     val barcodeScanner = remember { BarcodeScanning.getClient() }
+
+    val galleryLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri ->
+        uri ?: return@rememberLauncherForActivityResult
+        try {
+            @Suppress("DEPRECATION")
+            val bitmap = MediaStore.Images.Media.getBitmap(context.contentResolver, uri)
+            val image = InputImage.fromBitmap(bitmap, 0)
+            barcodeScanner.process(image)
+                .addOnSuccessListener { barcodes ->
+                    val barcode = barcodes.firstOrNull()
+                    if (barcode?.rawValue != null) {
+                        val format = when (barcode.format) {
+                            Barcode.FORMAT_QR_CODE    -> "QR_CODE"
+                            Barcode.FORMAT_DATA_MATRIX -> "DATA_MATRIX"
+                            Barcode.FORMAT_PDF417      -> "PDF_417"
+                            Barcode.FORMAT_AZTEC       -> "AZTEC"
+                            Barcode.FORMAT_EAN_13      -> "EAN_13"
+                            Barcode.FORMAT_EAN_8       -> "EAN_8"
+                            Barcode.FORMAT_CODE_128    -> "CODE_128"
+                            Barcode.FORMAT_CODE_39     -> "CODE_39"
+                            Barcode.FORMAT_CODE_93     -> "CODE_93"
+                            Barcode.FORMAT_UPC_A       -> "UPC_A"
+                            Barcode.FORMAT_UPC_E       -> "UPC_E"
+                            else -> "UNKNOWN"
+                        }
+                        viewModel.onEvent(ScannerEvent.CodeScanned(barcode.rawValue!!, format))
+                    } else {
+                        Toast.makeText(context, "Nu s-a găsit niciun cod în imagine", Toast.LENGTH_SHORT).show()
+                    }
+                }
+                .addOnFailureListener {
+                    Toast.makeText(context, "Eroare la citirea imaginii", Toast.LENGTH_SHORT).show()
+                }
+        } catch (e: Exception) {
+            Toast.makeText(context, "Nu s-a putut deschide imaginea", Toast.LENGTH_SHORT).show()
+        }
+    }
 
     // Hold a reference to the PreviewView so we can rebind on flip
     var previewView by remember { mutableStateOf<PreviewView?>(null) }
@@ -177,6 +220,7 @@ fun ScannerScreen(
                 onFlipCamera = { viewModel.onEvent(ScannerEvent.FlipCamera) },
                 onClose = { viewModel.onEvent(ScannerEvent.Close) },
                 onZoomChange = { viewModel.onEvent(ScannerEvent.SetZoom(it)) },
+                onGalleryClick = { galleryLauncher.launch("image/*") },
                 modifier = Modifier.align(Alignment.BottomCenter)
             )
 
